@@ -1,0 +1,250 @@
+---
+title: "Discrete Probability"
+author: "Raúl López"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+The probability of an event is the proportion of times the event occurs when we repeat the experiment independently under the same conditions.
+
+An event is defined as an outcome that can occur when when something happens by chance.
+
+For example, if we have an urn with 8 red, 2 green and 6 orange balls, the probability of drawing a red ball is 8/(8+2+6).
+
+```{r}
+cyan <- 3
+magenta <- 5
+yellow <- 7
+
+p <- cyan/(cyan+magenta+yellow) # probability of getting a cyan ball
+p
+
+1 - p # probability of not getting a cyan ball
+```
+
+
+## Monte Carlo simulations
+
+Monte Carlo simulations model the probability of different outcomes by repeating a random process a large enough number of times that the results are similar to what would be observed if the process were repeated forever.
+
+The `sample()` function draws random outcomes from a set of options. `The replicate()` function repeats lines of code a set number of times. It is used with `sample()` and similar functions to run Monte Carlo simulations.
+
+```{r}
+beads <- rep(c("red", "blue"), times = c(2,3))    # create an urn with 2 red, 3 blue
+beads    # view beads object
+sample(beads, 1)    # sample 1 bead at random
+
+B <- 10000    # number of times to draw 1 bead
+events <- replicate(B, sample(beads, 1))    # draw 1 bead, B times
+tab <- table(events)    # make a table of outcome counts
+tab    # view count table
+prop.table(tab)    # view table of outcome proportions
+```
+
+We can use the `mean()` function in order to calculate the probability of a Monte Carlo simulation
+
+```{r}
+mean(events == "red")
+```
+
+# Independence
+
+Conditional probabilities compute the probability that an event occurs given information about dependent events. For example, the probability of drawing a second king given that the first draw is a king is:
+
+```{r}
+n <- 52 # number of cards
+pking1 <- 4/52 # probability of drawing a king
+n <- 52 - 1 # we do not replace the king card
+pking2 <- 3/51 # probability of drawing a second king
+```
+
+On the other hand, when we have two independent events, the probabilities of each one is not affected by the other.
+
+To determine the probability of multiple events occurring, we use the multiplication rule.
+
+```{r}
+pking1 * pking2 # Probabiliy of drawing two kings by row
+```
+
+The multiplication rule also gives us a general formula for computing conditional probabilities:
+
+Probability of B when A occurs is the probability of two events divided by the probability of A
+
+Pr(B | A) = (P(A) & P(b)) / P(A)
+
+
+## Exercises
+
+1) If you roll a 6-sided die once, what is the probability of not seeing a 6? If you roll a 6-sided die six times, what is the probability of not seeing a 6 on any of those rolls?
+
+```{r}
+p <- 5/6 # probability of not seeing a 6
+p^6 # probability of not seeing a 6 in 6 rolls
+```
+
+2) Two teams, say the Celtics and the Cavs, are playing a seven game series. The Cavs are a better team and have a 60% chance of winning each game. What is the probability that the Celtics win at least one game?
+
+```{r}
+celtics_win_all <- 0.6^4 # probability that celtics win 4 games
+1 - celtics_win_all # probability that Cavs win at least 1 game
+```
+
+3) Create a Monte Carlo simulation to confirm your answer to the previous problem by estimating how frequently the Celtics win at least 1 of 4 games. Use B <- 10000 simulations.
+
+```{r}
+B <- 10000
+celtic_wins <- replicate(B, {
+  simulated_games <- sample(c("lose","win"), 4, replace = TRUE, prob = c(0.6, 0.4))
+  any(simulated_games=="win")
+})
+
+# Calculate the frequency out of B iterations that the Celtics won at least one game. Print your answer to the console. 
+mean(celtic_wins)
+```
+
+# Combination and Permutations
+
+`paste()` joins two strings and inserts a space in between.
+
+```{r}
+number <- "Three"
+suit <- "Hearts"
+paste(number, suit)
+```
+
+`expand.grid()` gives the combinations of 2 vectors or lists.
+
+```{r}
+expand.grid(pants = c("blue", "black"), shirt = c("white", "grey", "pink"))
+```
+
+`permutations(n,r)` from the gtools package lists the different ways that r items can be selected from a set of n options when order matters.
+
+```{r}
+# Generating the deck of cards
+suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
+numbers <- c("Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King")
+deck <- expand.grid(number = numbers, suit = suits)
+deck <- paste(deck$number, deck$suit)
+head(deck)
+
+library(gtools)
+
+hands <- permutations(52,2, v = deck)
+dim(hands)
+summary(hands)
+```
+
+We can now calculate the probability of drawing a second king given that one king is drawn as:
+
+```{r}
+kings <- paste("King", suits)
+first_card <- hands[,1]
+second_card <- hands[,2]
+sum(first_card %in% kings) # Number of permutations in which first card is a king
+sum(first_card %in% kings & second_card %in% kings) # number of permutation in ehich first and second cards are a king
+sum(first_card %in% kings & second_card %in% kings) / sum(first_card %in% kings) # the probability of getting two kings in a row
+```
+
+`combinations(n,r)` from the gtools package lists the different ways that r items can be selected from a set of n options when order does not matter.
+
+```{r}
+hands <- combinations(52, 2, v=deck)
+dim(hands)
+summary(hands)
+```
+
+Now we can compute the probability of a natural 21 in blackjack (getting an Ace and a facecard; the order does not matter)
+
+```{r}
+aces <- paste("Ace", suits)
+facecard <- c("King", "Queen", "Jack", "Ten")
+facecard <- expand.grid(number = facecard, suit = suits)
+facecard <- paste(facecard$number, facecard$suit)
+
+hands <- combinations(52, 2, v=deck) # all possible hands
+
+# probability of a natural 21 checking for both ace first and ace second
+mean((hands[,1] %in% aces & hands[,2] %in% facecard)|(hands[,2] %in% aces & hands[,1] %in% facecard))
+```
+# Birthday Problem
+
+Suppose you are in a classroom with 50 people. If we assume this is a randomly selected group of 50 people, what is the chance that at least two people have the same birthday? Although it is somewhat advanced, we can deduce this mathematically. We will do this later. Here we use a Monte Carlo simulation. For simplicity, we assume nobody was born on February 29. This actually doesn’t change the answer much.
+
+First, note that birthdays can be represented as numbers between 1 and 365, so a sample of 50 birthdays can be obtained like this:
+
+```{r}
+n <- 50
+bdays <- sample(1:365, n, replace = TRUE)
+any(duplicated(bdays)) # check for any duplicated birthday
+```
+
+To estimate the probability of a shared birthday in the group, we repeat this experiment by sampling sets of 50 birthdays over and over
+
+```{r}
+B <- 10000
+same_birthday <- function(n){
+  bdays <- sample(1:365, n, replace=TRUE)
+  any(duplicated(bdays))
+}
+results <- replicate(B, same_birthday(50))
+mean(results)
+```
+
+Say we want to use this knowledge to bet with friends about two people having the same birthday in a group of people. When are the chances larger than 50%? Larger than 75%?
+
+```{r}
+compute_prob <- function(n, B=10000){
+  results <- replicate(B, same_birthday(n)) # compute probs for all sample size
+  mean(results)
+}
+n <- seq(1,60)
+prob <- sapply(n, compute_prob)
+library(tidyverse)
+df <- data.frame(prob = prob, n = n)
+ggplot(df, aes(x = n, y = prob))+
+  geom_line()
+```
+
+Now let’s compute the exact probabilities rather than use Monte Carlo approximations. Not only do we get the exact answer using math, but the computations are much faster since we don’t have to generate experiments.
+
+To make the math simpler, instead of computing the probability of it happening, we will compute the probability of it not happening. For this, we use the multiplication rule.
+
+Let’s start with the first person. The probability that person 1 has a unique birthday is 1. The probability that person 2 has a unique birthday, given that person 1 already took one, is 364/365. Then, given that the first two people have unique birthdays, person 3 is left with 363 days to choose from.
+
+```{r}
+for (i in 1:50){
+  p <- (365 - n + 1)/365 # probability of having unique birthdays
+}
+
+# in other words
+exact_prob <- function(n){
+  prob_unique <- seq(365,365-n+1)/365 # probability of having unique birthday
+  1 - prod( prob_unique) # prod is the multiplication of vector
+}
+
+eprob <- sapply(n, exact_prob)
+
+df <- data.frame(prob = eprob, n = n)
+ggplot(df, aes(x = n, y = prob))+
+  geom_line()
+
+```
+
+
+
+
+
+
+
+
+
+# Exercises
+
+4) Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games wins the series. The teams are equally good, so they each have a 50-50 chance of winning each game. If the Cavs lose the first game, what is the probability that they win the series?
+
+```{r}
+n <- 6 # remaining games (7 - 1)
+
+```
+

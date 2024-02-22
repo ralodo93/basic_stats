@@ -1,6 +1,0 @@
----
-title: "Probability"
-author: "Raúl López"
-date: "`r Sys.Date()`"
-output: pdf_document
----
