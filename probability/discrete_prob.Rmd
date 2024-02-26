@@ -260,12 +260,6 @@ ggplot(df, aes(x = B, y = prob))+
 ```
 
 
-
-
-
-
-
-
 # Exercises
 
 1) Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games wins the series. The teams are equally good, so they each have a 50-50 chance of winning each game. If the Cavs lose the first game, what is the probability that they win the series?
@@ -447,6 +441,211 @@ A restaurant manager wants to advertise that his lunch special offers enough cho
 
 A meal at the restaurant includes 1 entree, 2 sides, and 1 drink. He currently offers a choice of 1 entree from a list of 6 options, a choice of 2 different sides from a list of 6 options, and a choice of 1 drink from a list of 2 options.
 
+1) How many meal combinations are possible with the current menu?
+
+```{r}
+# Different meals = 6
+# Different sides = 15
+combinations(6,2)
+# Different drink = 2
+6*15*2
+```
+
+2) The manager has one additional drink he could add to the special. How many combinations are possible if he expands his original special to 3 drink options?
+
+```{r}
+6*15*3
+```
+
+3) The manager decides to add the third drink but needs to expand the number of options. The manager would prefer not to change his menu further and wants to know if he can meet his goal by letting customers choose more sides. How many meal combinations are there if customers can choose from 6 entrees, 3 drinks, and select 3 sides from the current 6 options?
+
+```{r}
+# Different meals = 6
+# Different sides = 20
+combinations(6,3)
+# Different drink = 3
+6*20*3
+```
+
+4) The manager is concerned that customers may not want 3 sides with their meal. He is willing to increase the number of entree choices instead, but if he adds too many expensive options it could eat into profits. He wants to know how many entree choices he would have to offer in order to meet his goal.
+
+- Write a function that takes a number of entree choices and returns the number of meal combinations possible given that number of entree options, 3 drink choices, and a selection of 2 sides from 6 options.
+
+- Use sapply() to apply the function to entree option counts ranging from 1 to 12.
+
+What is the minimum number of entree options required in order to generate more than 365 combinations?
+
+```{r}
+meal_combs <- function(n){
+  drinks <- 3
+  sides <- 15
+  n*drinks*sides
+}
+
+sapply(1:12, meal_combs)
+```
+
+5) The manager isn't sure he can afford to put that many entree choices on the lunch menu and thinks it would be cheaper for him to expand the number of sides. He wants to know how many sides he would have to offer to meet his goal of at least 365 combinations.
+
+- Write a function that takes a number of side choices and returns the number of meal combinations possible given 6 entree choices, 3 drink choices, and a selection of 2 sides from the specified number of side choices.
+
+- Use sapply() to apply the function to side counts ranging from 2 to 12.
+
+What is the minimum number of side options required in order to generate more than 365 combinations?
+
+```{r}
+meal_combs <- function(n){
+  drinks <- 3
+  entrees <- 6
+  sides <- nrow(combinations(n,2))
+  drinks*entrees*sides
+}
+
+sapply(2:12, meal_combs)
+```
+
+# Esophageal cancer and alcohol/tobacco use
+
+Case-control studies help determine whether certain exposures are associated with outcomes such as developing cancer. The built-in dataset esoph contains data from a case-control study in France comparing people with esophageal cancer (cases, counted in ncases) to people without esophageal cancer (controls, counted in ncontrols) that are carefully matched on a variety of demographic and medical characteristics. The study compares alcohol intake in grams per day (alcgp) and tobacco intake in grams per day (tobgp) across cases and controls grouped by age range (agegp).
+
+```{r}
+head(esoph)
+```
+
+Each row contains one group of the experiment. Each group has a different combination of age, alcohol consumption, and tobacco consumption. The number of cancer cases and number of controls (individuals without cancer) are reported for each group.
+
+1) How many groups are in the study?
+
+```{r}
+nrow(esoph)
+```
+
+2) How many cases are there? How many controls are there?
+
+```{r}
+all_cases <- sum(esoph$ncases)
+all_cases
+
+all_controls <- sum(esoph$ncontrols)
+all_controls
+```
+
+3) What is the probability that a subject in the highest alcohol consumption group is a cancer case?
+
+```{r}
+esoph %>% filter(alcgp == "120+") %>%
+  summarize(sum_cases=sum(ncases), tot=sum(ncontrols) + sum(ncases), probability=sum_cases/tot)
+```
+
+4) What is the probability that a subject in the lowest alcohol consumption group is a cancer case?
+
+```{r}
+esoph %>% filter(alcgp == "0-39g/day") %>%
+  summarize(sum_cases=sum(ncases), tot=sum(ncontrols)+sum(ncases), probability=sum_cases/tot)
+```
+
+5) Given that a person is a case, what is the probability that they smoke 10g or more a day?
+
+```{r}
+esoph %>% summarize(tot_cases = sum(ncases))
+esoph %>% filter(tobgp != "0-9g/day") %>%
+  summarize(smoking10_cases = sum(ncases))
+122/200
+```
+
+6) Given that a person is a control, what is the probability that they smoke 10g or more a day
+
+
+```{r}
+esoph %>% summarize(tot_control = sum(ncontrols)) %>% pull(tot_control)
+esoph %>% filter(tobgp != "0-9g/day") %>%
+  summarize(smoking10_controls = sum(ncontrols)) %>% pull(smoking10_controls)
+328/775
+```
+
+7) For cases, what is the probability of being in the highest alcohol group?
+
+```{r}
+esoph %>% summarize(tot_cases = sum(ncases)) %>% pull(tot_cases)
+esoph %>% filter(alcgp == "120+") %>%
+  summarize(highest_alc = sum(ncases)) %>% pull(highest_alc)
+45/200
+```
+
+8) For cases, what is the probability of being in the highest tobacco group?
+
+```{r}
+esoph %>% summarize(tot_cases = sum(ncases)) %>% pull(tot_cases)
+esoph %>% filter(tobgp == "30+") %>%
+  summarize(highest_tob = sum(ncases)) %>% pull(highest_tob)
+31/200
+```
+
+9) For cases, what is the probability of being in the highest alcohol group and the highest tobacco group?
+
+```{r}
+esoph %>% summarize(tot_cases = sum(ncases)) %>% pull(tot_cases)
+esoph %>% filter(tobgp == "30+", alcgp == "120+") %>%
+  summarize(highest_tob = sum(ncases)) %>% pull(highest_tob)
+10/200
+```
+10) For cases, what is the probability of being in the highest alcohol group or the highest tobacco group?
+
+```{r}
+esoph %>% summarize(tot_cases = sum(ncases)) %>% pull(tot_cases)
+esoph %>% filter(tobgp == "30+" | alcgp == "120+") %>%
+  summarize(highest_tob = sum(ncases)) %>% pull(highest_tob)
+66/200
+```
+
+11) For controls, what is the probability of being in the highest alcohol group?
+
+```{r}
+esoph %>% summarize(tot_cntrls = sum(ncontrols)) %>% pull(tot_cntrls)
+esoph %>% filter(alcgp == "120+") %>%
+  summarize(highest_alc = sum(ncontrols)) %>% pull(highest_alc)
+22/775
+```
+
+12) How many times more likely are cases than controls to be in the highest alcohol group?
+
+```{r}
+esoph %>% filter(alcgp == "120+") %>%
+  summarize(contr_sum = sum(ncontrols), case_sum = sum(ncases),
+            co_prob = contr_sum/all_controls, ca_prob = case_sum/all_cases,
+            ratio = ca_prob/co_prob)
+```
+
+13) For controls, what is the probability of being in the highest tobacco group?
+
+```{r}
+esoph %>% filter(tobgp == "30+") %>%
+  summarize(contr_sum = sum(ncontrols), probability = contr_sum/all_controls)
+```
+
+14) For controls, what is the probability of being in the highest alcohol group and the highest tobacco group?
+
+```{r}
+esoph %>% filter(tobgp == "30+" & alcgp == "120+") %>%
+  summarize(contr_sum = sum(ncontrols), probability = contr_sum/all_controls)
+```
+
+15) For controls, what is the probability of being in the highest alcohol group or the highest tobacco group?
+
+```{r}
+esoph %>% filter(tobgp == "30+" | alcgp == "120+") %>%
+  summarize(contr_sum = sum(ncontrols), probability = contr_sum/all_controls)
+
+```
+
+16) How many times more likely are cases than controls to be in the highest alcohol group or the highest tobacco group?
+
+```{r}
+esoph %>% filter(alcgp == "120+" | tobgp == "30+") %>%
+  summarize(contr_sum = sum(ncontrols), case_sum = sum(ncases),
+            co_prob = contr_sum/all_controls, ca_prob = case_sum/all_cases,
+            ratio = ca_prob/co_prob)
+```
 
 
 
