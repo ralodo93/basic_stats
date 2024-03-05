@@ -360,10 +360,10 @@ display: none;
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <ul>
-<li>Random variables are numeric outcomes resulting from random
-processes.</li>
-<li>Statistical inference offers a framework for quantifying uncertainty
-due to randomness.</li>
+<li><p>Random variables are numeric outcomes resulting from random
+processes.</p></li>
+<li><p>Statistical inference offers a framework for quantifying
+uncertainty due to randomness.</p></li>
 </ul>
 <pre class="r"><code>set.seed(1)
 # define random variable x to be 1 if blue, 0 otherwise
@@ -375,16 +375,17 @@ print(x)</code></pre>
 <div id="sampling-models" class="section level1">
 <h1>Sampling Models</h1>
 <ul>
-<li>A sampling model models the random behavior of a process as the
-sampling of draws from an urn.</li>
-<li>The probability distribution of a random variable is the probability
-of the observed value falling in any given interval.</li>
-<li>We can define a CDF F(a)=Pr(S&lt;=a) to answer questions related to
-the probability of S being in any interval.</li>
-<li>The average of many draws of a random variable is called its
-expected value.</li>
-<li>The standard deviation of many draws of a random variable is called
-its standard error.</li>
+<li><p>A sampling model models the random behavior of a process as the
+sampling of draws from an urn.</p></li>
+<li><p>The probability distribution of a random variable is the
+probability of the observed value falling in any given
+interval.</p></li>
+<li><p>We can define a CDF F(a)=Pr(S&lt;=a) to answer questions related
+to the probability of S being in any interval.</p></li>
+<li><p>The average of many draws of a random variable is called its
+expected value.</p></li>
+<li><p>The standard deviation of many draws of a random variable is
+called its standard error.</p></li>
 </ul>
 <p>We use sampling model to run a Monte Carlo simulation and use the
 results to estimate the probability of an event. In this example, we
@@ -430,31 +431,179 @@ hist(S) # distribution of results</code></pre>
 <div id="distributions-versus-probability-distributions" class="section level1">
 <h1>Distributions versus Probability Distributions</h1>
 <ul>
-<li>A random variable X has a probability distribution function F(a)
-that defines Pr(X&lt;=a) over all values of a.</li>
-<li>Any list of numbers has a distribution. The probability distribution
-function of a random variable is defined mathematically and does not
-depend on a list of numbers.</li>
-<li>The results of a Monte Carlo simulation with a large enough number
-of observations will approximate the probability distribution of X</li>
-<li>If a random variable is defined as draws from an urn – The
-probability distribution function of the random variable is defined as
-the distribution of the list of values in the urn. – The expected value
-of the random variable is the average of values in the urn. – The
-standard error of one draw of the random variable is the standard
-deviation of the values of the urn.</li>
-<li>Capital letters denote random variables (X) and lowercase letters
-denote observed values (x)</li>
-<li>In the notation Pr(X=x), we are asking how frequently the random
-variable X is equal to the value x.</li>
+<li><p>A random variable X has a probability distribution function F(a)
+that defines Pr(X&lt;=a) over all values of a.</p></li>
+<li><p>Any list of numbers has a distribution. The probability
+distribution function of a random variable is defined mathematically and
+does not depend on a list of numbers.</p></li>
+<li><p>The results of a Monte Carlo simulation with a large enough
+number of observations will approximate the probability distribution of
+X.</p></li>
+<li><p>If a random variable is defined as draws from an urn:</p></li>
+</ul>
+<p>The probability distribution function of the random variable is
+defined as the distribution of the list of values in the urn.</p>
+<p>The expected value of the random variable is the average of values in
+the urn.</p>
+<p>The standard error of one draw of the random variable is the standard
+deviation of the values of the urn.</p>
+<ul>
+<li><p>Capital letters denote random variables (X) and lowercase letters
+denote observed values (x).</p></li>
+<li><p>In the notation Pr(X=x), we are asking how frequently the random
+variable X is equal to the value x.</p></li>
 </ul>
 </div>
 <div id="central-limit-theorem" class="section level1">
 <h1>Central Limit Theorem</h1>
 <ul>
-<li>The Central Limit Theorem (CLT) says that the distribution of the
-sum of a random variable is approximated by a normal distribution.</li>
+<li><p>The Central Limit Theorem (CLT) says that the distribution of the
+sum of a random variable is approximated by a normal
+distribution.</p></li>
+<li><p>The expected value of a random variable, E[X] = u, is the average
+of the values in the urn. This represents the expectation of one
+draw.</p></li>
+<li><p>The standard error of one draw of a random variable is the
+standard deviation of the values in the urn.</p></li>
+<li><p>The expected value of the sum of draws is the number of draws
+times the expected value of the random variable.</p></li>
+<li><p>The standard error of the sum of independent draws of a random
+variable is the square root of the number of draws times the standard
+deviation of the urn.</p></li>
+<li><p>These equations apply to the case where there are only two
+outcomes, a and b with proportions p and 1-p respectively. The general
+principles above also apply to random variables with more than two
+outcomes.</p></li>
 </ul>
+<p>Expected value of a random variable: E[X] = ap + b(1-p) Expected
+value of the sum of n draws of a random variable: n<em>E[X] Standard
+deviation of an urn with two values: sd(X) = |b-a|</em>sqrt(p(1-p))
+Standard error of the sum of n draws of a random variable: sqrt(n) *
+sd(X)</p>
+</div>
+<div id="exercises" class="section level1">
+<h1>Exercises</h1>
+<ol style="list-style-type: decimal">
+<li>An American roulette wheel has 18 red, 18 black, and 2 green
+pockets. Each red and black pocket is associated with a number from 1 to
+36. The two remaining green slots feature “0” and “00”. Players place
+bets on which pocket they think a ball will land in after the wheel is
+spun. Players can bet on a specific number (0, 00, 1-36) or color (red,
+black, or green). What are the chances that the ball lands in a green
+pocket?</li>
+</ol>
+<pre class="r"><code>green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+green/(black+red+green)</code></pre>
+<pre><code>## [1] 0.05263158</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>In American roulette, the payout for winning on green is $17. This
+means that if you bet $1 and it lands on green, you get $17 as a prize.
+Create a model to predict your winnings from betting on green one
+time.</li>
+</ol>
+<pre class="r"><code>set.seed(1)
+
+# The variables &#39;green&#39;, &#39;black&#39;, and &#39;red&#39; contain the number of pockets for each color
+green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+
+p_green &lt;- green/(black+red+green)
+p_not_green &lt;- 1 - p_green
+
+prob = sample(c(-1,17), 1, prob = c(p_not_green,p_green), replace = TRUE)
+print(prob)</code></pre>
+<pre><code>## [1] -1</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>In American roulette, the payout for winning on green is $17. This
+means that if you bet $1 and it lands on green, you get $17 as a prize.
+In the previous exercise, you created a model to predict your winnings
+from betting on green. Now, compute the expected value of X, the random
+variable you generated previously.</li>
+</ol>
+<pre class="r"><code># The variables &#39;green&#39;, &#39;black&#39;, and &#39;red&#39; contain the number of pockets for each color
+green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+
+p_green &lt;- green/(black+red+green)
+p_not_green &lt;- 1 - p_green
+
+X = 17*p_green + -1*(p_not_green)
+X</code></pre>
+<pre><code>## [1] -0.05263158</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>The standard error of a random variable tells us the difference
+between a random variable X and its expected value. You calculated a
+random variable X in exercise 2 and the expected value of that random
+variable in exercise 3. Now, compute the standard error of that random
+variable, which represents a single outcome after one spin of the
+roulette wheel.</li>
+</ol>
+<pre class="r"><code>green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+
+p_green &lt;- green/(black+red+green)
+p_not_green &lt;- 1 - p_green
+
+sdX &lt;- abs(-1-17)*sqrt(p_green*p_not_green)
+sdX</code></pre>
+<pre><code>## [1] 4.019344</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>You modeled the outcome of a single spin of the roulette wheel,X, in
+exercise 2. Now create a random variable S that sums your winnings after
+betting on green 1,000 times.</li>
+</ol>
+<pre class="r"><code>set.seed(1)
+
+# The variables &#39;green&#39;, &#39;black&#39;, and &#39;red&#39; contain the number of pockets for each color
+green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+
+p_green &lt;- green/(black+red+green)
+p_not_green &lt;- 1 - p_green
+
+n &lt;- 1000
+X &lt;- sample(c(-1,17),n,replace = TRUE, prob = c(p_not_green, p_green))
+S &lt;- sum(X)
+S</code></pre>
+<pre><code>## [1] -10</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>In the previous exercise, you generated a vector of random
+outcomes,S, after betting on green 1,000 times. What is the expected
+value of S? What is the standard error?</li>
+</ol>
+<pre class="r"><code># The variables &#39;green&#39;, &#39;black&#39;, and &#39;red&#39; contain the number of pockets for each color
+green &lt;- 2
+black &lt;- 18
+red &lt;- 18
+
+p_green &lt;- green/(black+red+green)
+p_not_green &lt;- 1 - p_green
+
+X &lt;- 17*p_green + -1*(p_not_green)
+n &lt;- 1000
+n*X</code></pre>
+<pre><code>## [1] -52.63158</code></pre>
+<pre class="r"><code>sdX &lt;- abs(-1-17)*sqrt(p_green*p_not_green)
+sqrt(n)*sdX</code></pre>
+<pre><code>## [1] 127.1028</code></pre>
+</div>
+<div id="averages-and-proportions" class="section level1">
+<h1>Averages and Proportions</h1>
+<ul>
+<li>Random variable times a constant</li>
+</ul>
+<p>The expected value of a random variable multiplied by a constant is
+that constant times its original expected value:</p>
+<p>E[aX] = au</p>
+<p>The standard error of a random variable multiplied by a constant is
+that constant times its original standard error:</p>
+<p>SE[aX] = aSD</p>
 </div>
 
 
