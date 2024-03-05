@@ -4,3 +4,310 @@ author: "Raúl López"
 date: "`r Sys.Date()`"
 output: html_document
 ---
+
+# Introduction
+
+The cumulative distribution function (CDF) is a distribution function for continuous data x that reports the proportion of the data  below a for all values of a:
+
+F(a) = Pr(x <= a)
+
+The CDF is the probability distribution function for continuous variables. For example, to determine the probability that a male student is taller than 70.5 inches given a vector of male heights x, we can use the CDF:
+
+Pr (x > 70.5) = 1 - Pr(x <= 70.5) = 1 - F(70.5)
+
+The probability that an observation is in between two values (a, b) is F(b) - F(a).
+
+```{r}
+library(tidyverse)
+library(dslabs)
+data(heights)
+x <- heights %>% filter(sex=="Male") %>% pull(height)
+
+F <- function(a) mean(x <= a) # CDF
+1 - F(70) # probability of male taller than 70 inches
+```
+
+# Theoretical Distribution
+
+pnorm(a, avg, s) gives the value of the CDF F(a) for the normal distribution defined by average avg and standard deviation s.
+
+We say that a random quantity is normally distributed with average avg and standard deviation s if the approximation pnorm(a, avg, s) holds for all values of a.
+
+If we are willing to use the normal approximation for height, we can estimate the distribution simply from the mean and standard deviation of our values.
+
+```{r}
+1 - pnorm(70, mean(x), sd(x))
+```
+
+If we treat the height data as discrete rather than categorical, we see that the data are not very useful because integer values are more common than expected due to rounding. This is called discretization.
+
+```{r}
+plot(prop.table(table(x)), xlab = "a = Height in inches", ylab = "Pr(x = a)")
+
+# probabilities in actual data over length 1 ranges containing an integer
+mean(x <= 68.5) - mean(x <= 67.5)
+mean(x <= 69.5) - mean(x <= 68.5)
+mean(x <= 70.5) - mean(x <= 69.5)
+
+# probabilities in normal approximation match well
+pnorm(68.5, mean(x), sd(x)) - pnorm(67.5, mean(x), sd(x))
+pnorm(69.5, mean(x), sd(x)) - pnorm(68.5, mean(x), sd(x))
+pnorm(70.5, mean(x), sd(x)) - pnorm(69.5, mean(x), sd(x))
+```
+
+# Probability Density
+
+The probability of a single value is not defined for a continuous distribution.
+
+The quantity with the most similar interpretation to the probability of a single value is the probability density function.
+
+The probability density is defined such that the integral of f(x) over a range gives the CDF of that range.
+
+In R, the probability density function for the normal distribution is given by dnorm()
+
+Note that dnorm() gives the density function and pnorm() gives the distribution function, which is the integral of the density function.
+
+We can use dnorm() to plot the density curve for the normal distribution
+
+```{r}
+x <- seq(-4, 4, length = 100)
+data.frame(x, f = dnorm(x)) %>%
+    ggplot(aes(x, f)) +
+    geom_line()
+```
+
+# Monte Carlo Simulations
+
+rnorm(n, avg, s) generates n random numbers from the normal distribution with average avg and standard deviation s.
+
+By generating random numbers from the normal distribution, we can simulate height data with similar properties to our dataset. Here we generate simulated height data using the normal distribution.
+
+```{r}
+# generate simulated height data using normal distribution - both datasets should have n observations
+x <- heights %>% filter(sex=="Male") %>% pull(height)
+n <- length(x)
+avg <- mean(x)
+s <- sd(x)
+simulated_heights <- rnorm(n, avg, s)
+
+data.frame(real_heights = x) %>%
+    ggplot(aes(real_heights)) +
+    geom_histogram(color="black", binwidth = 2)
+
+data.frame(simulated_heights = simulated_heights) %>%
+    ggplot(aes(simulated_heights)) +
+    geom_histogram(color="black", binwidth = 2)
+```
+
+We can run Monte Carlo simulations:
+
+```{r}
+# Monte Carlo simulation of tallest person over 7 feet
+B <- 10000
+tallest <- replicate(B, {
+    simulated_data <- rnorm(800, avg, s)    # generate 800 normally distributed random heights
+    max(simulated_data)    # determine the tallest height
+})
+mean(tallest >= 7*12)    # proportion of times that tallest person exceeded 7 feet (84 inches)
+```
+
+# Other continuous distributions
+
+You may encounter other continuous distributions (Student t, chi-squared, exponential, gamma, beta, etc.).
+
+R provides functions for density (d), quantile (q), probability distribution (p) and random number generation (r) for many of these distributions.
+
+Each distribution has a matching abbreviation (for example, norm() or t()) that is paired with the related function abbreviations (d, p, q, r) to create appropriate functions.
+
+
+# Exercises
+
+1) Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 5 feet or shorter?
+
+```{r}
+female_avg <- 64
+female_sd <- 3
+pnorm(5*12, female_avg, female_sd)
+```
+
+2) Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 6 feet or taller?
+
+```{r}
+female_avg <- 64
+female_sd <- 3
+1 - pnorm(6*12, female_avg, female_sd)
+```
+
+3) Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is between 61 and 67 inches?
+
+```{r}
+female_avg <- 64
+female_sd <- 3
+pnorm(67,female_avg,female_sd) - pnorm(61,female_avg,female_sd)
+```
+
+4) Repeat the previous exercise, but convert everything to centimeters. That is, multiply every height, including the standard deviation, by 2.54. What is the answer now?
+
+```{r}
+female_avg <- 64*2.54
+female_sd <- 3*2.54
+pnorm(67*2.54,female_avg,female_sd) - pnorm(61*2.54,female_avg,female_sd)
+```
+
+5) Compute the probability that the height of a randomly chosen female is within 1 SD from the average height.
+
+```{r}
+female_avg <- 64
+female_sd <- 3
+taller <- female_avg + female_sd
+shorter <- female_avg - female_sd
+pnorm(taller, female_avg,female_sd) - pnorm(shorter,female_avg,female_sd)
+```
+
+6) Imagine the distribution of male adults is approximately normal with an average of 69 inches and a standard deviation of 3 inches. How tall is a male in the 99th percentile?
+
+```{r}
+male_avg <- 69
+male_sd <- 3
+qnorm(0.99, male_avg, male_sd)
+```
+
+7) The distribution of IQ scores is approximately normally distributed. The average is 100 and the standard deviation is 15. Suppose you want to know the distribution of the person with the highest IQ in your school district, where 10,000 people are born each year.
+
+Generate 10,000 IQ scores 1,000 times using a Monte Carlo simulation. Make a histogram of the highest IQ scores.
+
+```{r}
+iq_avg <- 100
+iq_sd <- 15
+
+B <- 1000
+set.seed(1)
+
+highestIQ <- replicate(B, {
+  x <- rnorm(10000, iq_avg, iq_sd)
+  max(x)
+})
+
+hist(highestIQ)
+```
+
+# ACT scores (Exercise)
+
+The ACT is a standardized college admissions test used in the United States. The four multi-part questions in this assessment all involve simulating some ACT test scores and answering probability questions about them.
+
+For the three year period 2016-2018, ACT standardized test scores were approximately normally distributed with a mean of 20.9 and standard deviation of 5.7. (Real ACT scores are integers between 1 and 36, but we will ignore this detail and use continuous values instead.)
+
+```{r}
+act_avg <- 20.9
+act_sd <- 5.7
+```
+
+Set the seed to 16, then use rnorm() to generate a normal distribution of 10000 tests with a mean of 20.9 and standard deviation of 5.7. Save these values as act_scores. You'll be using this dataset throughout these four multi-part questions.
+
+```{r}
+set.seed(16, sample.kind = "Rounding")
+act_scores <- rnorm(10000, act_avg, act_sd)
+```
+
+1) What is the mean of act_scores? And the sd?
+
+```{r}
+mean(act_scores)
+sd(act_scores)
+```
+
+
+2) A perfect score is 36 or greater (the maximum reported score is 36).
+In act_scores, how many perfect scores are there out of 10,000 simulated tests?
+
+```{r}
+length(act_scores[act_scores >= 36])
+```
+
+3) In act_scores, what is the probability of an ACT score greater than 30?
+
+```{r}
+mean(act_scores > 30)
+```
+
+4) In act_scores, what is the probability of an ACT score less than or equal to 10?
+
+```{r}
+mean(act_scores <= 10)
+```
+
+5) Set x equal to the sequence of integers 1 to 36. Use dnorm to determine the value of the probability density function over x given a mean of 20.9 and standard deviation of 5.7; save the result as f_x. Plot x against f_x.
+
+```{r}
+x <- seq(1,36)
+f_x <- dnorm(x, act_avg, act_sd)
+plot(x, f_x)
+```
+
+6) Convert act_scores to Z-scores (values distributed with a mean of 0 and standard deviation of 1), you must subtract the mean and then divide by the standard deviation. Use the mean and standard deviation of act_scores, not the original values used to generate random test scores.
+
+```{r}
+z_scores <- (act_scores - mean(act_scores))/sd(act_scores)
+```
+
+7) What is the probability of a Z-score greater than 2 (2 standard deviations above the mean)?
+
+```{r}
+mean(z_scores > 2)
+```
+
+8) What ACT score value corresponds to 2 standard deviations above the mean (Z = 2)?
+
+```{r}
+# z_score <- (act_score - mean(act_scores))/sd(act_scores)
+# 2 <- (act_score - mean(act_scores))/sd(act_scores)
+# 2*sd(act_scores) = act_score - mean(act_scores)
+# 2*sd(act_scores) + mean(act_scores) = act_score
+2*sd(act_scores) + mean(act_scores)
+```
+
+9) A Z-score of 2 corresponds roughly to the 97.5th percentile. Use qnorm() to determine the 97.5th percentile of normally distributed data with the mean and standard deviation observed in act_scores. What is the 97.5th percentile of act_scores?
+
+```{r}
+qnorm(0.975, act_avg, act_sd)
+```
+
+Write a function that takes a value and produces the probability of an ACT score less than or equal to that value (the CDF). Apply this function to the range 1 to 36.
+
+```{r}
+cdf <- sapply(1:36, function (x){
+  mean(act_scores <= x)
+})
+```
+
+10) What is the minimum integer score such that the probability of that score or lower is at least .95?
+
+```{r}
+min(which(cdf >= .95))
+```
+
+11) Use qnorm() to determine the expected 95th percentile, the value for which the probability of receiving that score or lower is 0.95, given a mean score of 20.9 and standard deviation of 5.7. What is the expected 95th percentile of ACT scores?
+
+```{r}
+qnorm(0.95, act_avg, act_sd)
+```
+
+12) Make a vector containing the quantiles for p <- seq(0.01, 0.99, 0.01), the 1st through 99th percentiles of the act_scores data. Save these as sample_quantiles. In what percentile is a score of 26?
+
+```{r}
+p <- seq(0.01, 0.99, 0.01)
+sample_quantiles <- quantile(act_scores, p)
+names(sample_quantiles[max(which(sample_quantiles < 26))])
+```
+
+13) Make a corresponding set of theoretical quantiles using qnorm() over the interval p <- seq(0.01, 0.99, 0.01) with mean 20.9 and standard deviation 5.7. Save these as theoretical_quantiles. Make a QQ-plot graphing sample_quantiles on the y-axis versus theoretical_quantiles on the x-axis.
+
+```{r}
+theorical_quantiles <- qnorm(p, act_avg, act_sd)
+qplot(theorical_quantiles, sample_quantiles) + geom_abline()
+```
+
+
+
+
+
