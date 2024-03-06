@@ -1125,6 +1125,183 @@ mean(profit)    # expected value of the profit over n loans</code></pre>
 <pre class="r"><code>mean(profit&lt;0)    # probability of losing money</code></pre>
 <pre><code>## [1] 0.0125</code></pre>
 </div>
+<div id="the-big-short-1" class="section level2">
+<h2>The Big Short</h2>
+<ul>
+<li><p>The Central Limit Theorem states that the sum of independent
+draws of a random variable follows a normal distribution. However, when
+the draws are not independent, this assumption does not hold.</p></li>
+<li><p>If an event changes the probability of default for all borrowers,
+then the probability of the bank losing money changes.</p></li>
+<li><p>Monte Carlo simulations can be used to model the effects of
+unknown changes in the probability of default.</p></li>
+</ul>
+<pre class="r"><code># Expected value with higher default rate and interest rate
+p &lt;- .04
+loss_per_foreclosure &lt;- -200000
+r &lt;- 0.05
+x &lt;- r*180000
+loss_per_foreclosure*p + x*(1-p)</code></pre>
+<pre><code>## [1] 640</code></pre>
+<p>We can define our desired probability of losing money, z, as</p>
+<p>Pr(S &lt; 0) = Pr(Z &lt; -(mu/sigma)) = Pr(Z &lt; z)</p>
+<p>if z = -(mu/sigma) then z = -(n*avg)/sqrt(n*sd) = -
+sqrt(n*avg)/sd</p>
+<p>z &lt;= - sqrt(n*avg)/sd</p>
+<p>n &gt;= (z^2 * sd<sup>2)/avg</sup>2</p>
+<pre class="r"><code># Calculating number of loans for desired probability of losing money
+z &lt;- qnorm(0.01)
+l &lt;- loss_per_foreclosure
+n &lt;- ceiling((z^2*(x-l)^2*p*(1-p))/(l*p + x*(1-p))^2)
+n    # number of loans required</code></pre>
+<pre><code>## [1] 22163</code></pre>
+<pre class="r"><code>n*(loss_per_foreclosure*p + x * (1-p))    # expected profit over n loans</code></pre>
+<pre><code>## [1] 14184320</code></pre>
+<pre class="r"><code># Monte Carlo simulation
+B &lt;- 10000
+p &lt;- 0.04
+x &lt;- 0.05 * 180000
+profit &lt;- replicate(B, {
+    draws &lt;- sample( c(x, loss_per_foreclosure), n, 
+                        prob=c(1-p, p), replace = TRUE) 
+    sum(draws)
+})
+mean(profit)</code></pre>
+<pre><code>## [1] 14182962</code></pre>
+</div>
+<div id="exercises-2" class="section level2">
+<h2>Exercises</h2>
+<ol style="list-style-type: decimal">
+<li>Say you manage a bank that gives out 10,000 loans. The default rate
+is 0.03 and you lose $200,000 in each foreclosure. Create a random
+variable S that contains the earnings of your bank. Calculate the total
+amount of money lost in this scenario.</li>
+</ol>
+<pre class="r"><code># Assign the number of loans to the variable `n`
+n &lt;- 10000
+
+# Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure &lt;- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default &lt;- 0.03
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# Generate a vector called `defaults` that contains the default outcomes of `n` loans
+defaults &lt;- sample(c(0,1), n, replace = T, prob = c(1-p_default, p_default))
+
+# Generate `S`, the total amount of money lost across all foreclosures. Print the value to the console.
+S &lt;- sum(defaults * loss_per_foreclosure)
+S</code></pre>
+<pre><code>## [1] -6.3e+07</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Run a Monte Carlo simulation with 10,000 outcomes for S, the sum of
+losses over 10,000 loans. Make a histogram of the results.</li>
+</ol>
+<pre class="r"><code># Assign the number of loans to the variable `n`
+n &lt;- 10000
+
+# Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure &lt;- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default &lt;- 0.03
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# The variable `B` specifies the number of times we want the simulation to run
+B &lt;- 10000
+
+# Generate a list of summed losses &#39;S&#39;. Replicate the code from the previous exercise over &#39;B&#39; iterations to generate a list of summed losses for &#39;n&#39; loans.  Ignore any warnings for now.
+S &lt;- replicate(B, {
+  defaults &lt;- sample(c(0,1), n, replace = T, prob = c(1-p_default, p_default))
+  sum(defaults * loss_per_foreclosure)
+})
+
+hist(S)</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+<ol start="3" style="list-style-type: decimal">
+<li>What is the expected value of S, the sum of losses over 10,000
+loans? For now, assume a bank makes no money if the loan is paid. What
+is the standard error?</li>
+</ol>
+<pre class="r"><code># Assign the number of loans to the variable `n`
+n &lt;- 10000
+
+# Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure &lt;- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default &lt;- 0.03
+
+# Calculate the expected loss due to default out of 10,000 loans
+avg &lt;- loss_per_foreclosure*p_default + 0*(1-p_default)
+n*avg</code></pre>
+<pre><code>## [1] -6e+07</code></pre>
+<pre class="r"><code># Compute the standard error of the sum of 10,000 loans
+sd &lt;- abs(loss_per_foreclosure-0)*sqrt(p_default*(1-p_default))
+sqrt(n) * sd</code></pre>
+<pre><code>## [1] 3411744</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>So far, we’ve been assuming that we make no money when people pay
+their loans and we lose a lot of money when people default on their
+loans. Assume we give out loans for $180,000. How much money do we need
+to make when people pay their loans so that our net loss is $0? In other
+words, what interest rate do we need to charge in order to not lose
+money?</li>
+</ol>
+<pre class="r"><code># Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure &lt;- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default &lt;- 0.03
+
+# Assign a variable `x` as the total amount necessary to have an expected outcome of $0
+# l*p + x*(1-p) = 0
+x = - loss_per_foreclosure*p_default/(1-p_default)
+
+# Convert `x` to a rate, given that the loan amount is $180,000. Print this value to the console.
+x &lt;- x/180000
+x</code></pre>
+<pre><code>## [1] 0.03436426</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>With the interest rate calculated in the last example, we still lose
+money 50% of the time. What should the interest rate be so that the
+chance of losing money is 1 in 20? In math notation, what should the
+interest rate be so that Pr(S&lt;0) = 0.05?</li>
+</ol>
+<pre class="r"><code># Assign the number of loans to the variable `n`
+n &lt;- 10000
+
+# Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure &lt;- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default &lt;- 0.03
+
+# Generate a variable `z` using the `qnorm` function
+z &lt;- qnorm(0.05)
+
+# Generate a variable `x` using `z`, `p_default`, `loss_per_foreclosure`, and `n`
+# x &lt;- -l*((np - z*sqrt(np(1-p)))/(n(1-p)+z*sqrt(np(1-p))))
+x &lt;- -loss_per_foreclosure*( n*p_default - z*sqrt(n*p_default*(1-p_default)))/ ( n*(1-p_default) + z*sqrt(n*p_default*(1-p_default)))
+
+# Convert `x` to an interest rate, given that the loan amount is $180,000. Print this value to the console.
+x &lt;- x/180000
+x</code></pre>
+<pre><code>## [1] 0.03768738</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>The bank wants to minimize the probability of losing money. Which of
+the following achieves their goal without making interest rates go up?
+Reduce default rate.</li>
+</ol>
+</div>
+<div id="assessment" class="section level2">
+<h2>Assessment</h2>
+</div>
 </div>
 
 
