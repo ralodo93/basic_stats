@@ -11,7 +11,7 @@
 
 <meta name="author" content="Raúl López" />
 
-<meta name="date" content="2024-03-05" />
+<meta name="date" content="2024-03-06" />
 
 <title>Random Variables</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">Random Variables</h1>
 <h4 class="author">Raúl López</h4>
-<h4 class="date">2024-03-05</h4>
+<h4 class="date">2024-03-06</h4>
 
 </div>
 
@@ -599,11 +599,532 @@ sqrt(n)*sdX</code></pre>
 <li>Random variable times a constant</li>
 </ul>
 <p>The expected value of a random variable multiplied by a constant is
-that constant times its original expected value:</p>
-<p>E[aX] = au</p>
-<p>The standard error of a random variable multiplied by a constant is
-that constant times its original standard error:</p>
-<p>SE[aX] = aSD</p>
+that constant times its original expected value The standard error of a
+random variable multiplied by a constant is that constant times its
+original standard error</p>
+<p>E[aX] = a<em>mu SE[aX] = a</em>se</p>
+<ul>
+<li>Average of multiple draws of a random variable</li>
+</ul>
+<p>The expected value of the average of multiple draws from an urn is
+the expected value of the urn (mu). The standard deviation of the
+average of multiple draws from an urn is the standard deviation of the
+urn divided by the square root of the number of draws (se/sqrt(n)).</p>
+<ul>
+<li>The sum of multiple draws of a random variable</li>
+</ul>
+<p>The expected value of the sum of n draws of a random variable is n
+times its original expected value The standard error of the sum of n
+draws of random variable is sqrt(n) times its original standard
+error</p>
+<p>E[nX] = n<em>mu SE[nX] = sqrt(n</em>se)</p>
+<ul>
+<li>The sum of multiple different random variables</li>
+</ul>
+<p>The expected value of the sum of different random variables is the
+sum of the individual expected values for each random variable The
+standard error of the sum of different random variables is the square
+root of the sum of squares of the individual standard errors</p>
+<p>E[X1+X2+X3] = mu1 + mu2 + mu3 SE[X1+X2+X3] = sqrt(se1^2 + se2^2 +
+se3^2)</p>
+</div>
+<div id="law-of-large-numbers" class="section level1">
+<h1>Law of large numbers</h1>
+<ul>
+<li>The law of large numbers states that as n increases, the standard
+error of the average of a random variable decreases. In other words,
+when n is large, the average of the draws converges to the average of
+the urn.</li>
+<li>The law of large numbers is also known as the law of averages.</li>
+<li>The law of averages only applies when n is very large and events are
+independent. It is often misused to make predictions about an event
+being “due” because it has happened less frequently than expected in a
+small sample size.</li>
+</ul>
+</div>
+<div id="how-large-is-clt" class="section level1">
+<h1>How large is CLT</h1>
+<ul>
+<li>The sample size required for the Central Limit Theorem and Law of
+Large Numbers to apply differs based on the probability of success.</li>
+</ul>
+<p>If the probability of success is high, then relatively few
+observations are needed. As the probability of success decreases, more
+observations are needed.</p>
+<ul>
+<li>If the probability of success is extremely low, such as winning a
+lottery, then the Central Limit Theorem may not apply even with
+extremely large sample sizes. The normal distribution is not a good
+approximation in these cases, and other distributions such as the
+Poisson distribution (not discussed in these courses) may be more
+appropriate.</li>
+</ul>
+</div>
+<div id="exercises-1" class="section level1">
+<h1>Exercises</h1>
+<ol style="list-style-type: decimal">
+<li>In the previous chapter of exercises, you created a random variable
+S that is the sum of your winnings after betting on green a number of
+times in American Roulette. What is the probability that you end up
+winning money if you bet on green 100 times?</li>
+</ol>
+<pre class="r"><code># Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1-p_green
+
+# Define the number of bets using the variable &#39;n&#39;
+n &lt;- 100
+
+# Calculate &#39;avg&#39;, the expected outcome of 100 spins if you win $17 when the ball lands on green and you lose $1 when the ball doesn&#39;t land on green
+avg &lt;- n * (17*p_green + -1*p_not_green)
+
+# Compute &#39;se&#39;, the standard error of the sum of 100 outcomes
+se &lt;- sqrt(n) * (17 - -1)*sqrt(p_green*p_not_green)
+
+# Using the expected value &#39;avg&#39; and standard error &#39;se&#39;, compute the probability that you win money betting on green 100 times.
+prob_loss_money &lt;- pnorm(0,avg,se) # p(x &lt; 0)
+1-prob_loss_money</code></pre>
+<pre><code>## [1] 0.4479091</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Create a Monte Carlo simulation that generates 10,000 outcomes of S,
+the sum of 100 bets. Compute the average and standard deviation of the
+resulting list and compare them to the expected value (-5.263158) and
+standard error (40.19344) for that you calculated previously.</li>
+</ol>
+<pre class="r"><code># Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1-p_green
+
+# Define the number of bets using the variable &#39;n&#39;
+n &lt;- 100
+
+# The variable `B` specifies the number of times we want the simulation to run. Let&#39;s run the Monte Carlo simulation 10,000 times.
+B &lt;- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling.
+set.seed(1)
+
+# Create an object called `S` that replicates the sample code for `B` iterations and sums the outcomes.
+S &lt;- replicate(B, {
+  X &lt;- sample(c(17,-1), n, replace = T, prob = c(p_green, p_not_green))
+  sum(X)
+})
+
+
+# Compute the average value for &#39;S&#39;
+mean(S)</code></pre>
+<pre><code>## [1] -5.9086</code></pre>
+<pre class="r"><code># Calculate the standard deviation of &#39;S&#39;
+sd(S)</code></pre>
+<pre><code>## [1] 40.30608</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Now, calculate the probability of winning money from the Monte Carlo
+simulation. The Monte Carlo simulation from the previous exercise has
+already been pre-run for you, resulting in the variable S that contains
+a list of 10,000 simulated outcomes</li>
+</ol>
+<pre class="r"><code>mean(S &gt; 0)</code></pre>
+<pre><code>## [1] 0.4232</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>The Monte Carlo result and the CLT approximation for the probability
+of losing money after 100 bets are close, but not that close. What could
+account for this?</li>
+</ol>
+<p>The CLT does not work as well when the probability of success is
+small.</p>
+<ol start="5" style="list-style-type: decimal">
+<li>Now create a random variable that contains your average winnings per
+bet after betting on green 10,000 times.</li>
+</ol>
+<pre class="r"><code># Use the `set.seed` function to make sure your answer matches the expected result after random sampling.
+set.seed(1)
+
+# Define the number of bets using the variable &#39;n&#39;
+n &lt;- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1 - p_green
+
+# Create a vector called `X` that contains the outcomes of `n` bets
+X &lt;- sample(c(17,-1),n,replace = T, prob = c(p_green, p_not_green))
+
+# Define a variable `Y` that contains the mean outcome per bet. Print this mean to the console.
+Y &lt;- mean(X)
+Y</code></pre>
+<pre><code>## [1] 0.008</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>What is the expected value of Y, the average outcome per bet after
+betting on green 10,000 times?</li>
+</ol>
+<pre class="r"><code># Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1 - p_green
+
+# Calculate the expected outcome of `Y`, the mean outcome per bet in 10,000 bets
+# E[X] = ap + b(1-p)
+Y &lt;- p_green*17 + (-1*(p_not_green))
+Y</code></pre>
+<pre><code>## [1] -0.05263158</code></pre>
+<ol start="7" style="list-style-type: decimal">
+<li>What is the standard error of Y, the average result of 10,000
+spins?</li>
+</ol>
+<pre class="r"><code># Define the number of bets using the variable &#39;n&#39;
+n &lt;- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1 - p_green
+
+# Compute the standard error of &#39;Y&#39;, the mean outcome per bet from 10,000 bets.
+### |b-a|*sqrt(p(1-p))
+se &lt;- abs(17+1)*sqrt(p_green*p_not_green)
+se/sqrt(n)</code></pre>
+<pre><code>## [1] 0.04019344</code></pre>
+<ol start="8" style="list-style-type: decimal">
+<li>What is the probability that your winnings are positive after
+betting on green 10,000 times?</li>
+</ol>
+<pre class="r"><code># Define the number of bets using the variable &#39;n&#39;
+n &lt;- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1 - p_green
+
+# We defined the average using the following code
+avg &lt;- 17*p_green + -1*p_not_green
+
+# We defined standard error using this equation
+se &lt;- 1/sqrt(n) * (17 - -1)*sqrt(p_green*p_not_green)
+
+# Given this average and standard error, determine the probability of winning more than $0. Print the result to the console.
+
+1 - pnorm(0, mean=avg, sd = se)</code></pre>
+<pre><code>## [1] 0.0951898</code></pre>
+<ol start="9" style="list-style-type: decimal">
+<li>Create a Monte Carlo simulation that generates 10,000 outcomes of S,
+the average outcome from 10,000 bets on green. Compute the average and
+standard deviation of the resulting list to confirm the results from
+previous exercises using the Central Limit Theorem.</li>
+</ol>
+<pre class="r"><code># The variable `n` specifies the number of independent bets on green
+n &lt;- 10000
+
+# The variable `B` specifies the number of times we want the simulation to run
+B &lt;- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random number generation
+set.seed(1)
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green &lt;- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green &lt;- 1 - p_green
+
+# Generate a vector `S` that contains the the average outcomes of 10,000 bets modeled 10,000 times
+S &lt;- replicate(B, {
+  X &lt;- sample(c(17,-1),n,replace = T, prob = c(p_green, p_not_green))
+  mean(X)
+})
+
+# Compute the average of `S`
+mean(S)</code></pre>
+<pre><code>## [1] -0.05223142</code></pre>
+<pre class="r"><code># Compute the standard deviation of `S`
+sd(S)</code></pre>
+<pre><code>## [1] 0.03996168</code></pre>
+<ol start="10" style="list-style-type: decimal">
+<li>In a previous exercise, you found the probability of winning more
+than $0 after betting on green 10,000 times using the Central Limit
+Theorem. Then, you used a Monte Carlo simulation to model the average
+result of betting on green 10,000 times over 10,000 simulated series of
+bets. What is the probability of winning more than $0 as estimated by
+your Monte Carlo simulation? The code to generate the vector S that
+contains the the average outcomes of 10,000 bets modeled 10,000 times
+has already been run for you.</li>
+</ol>
+<pre class="r"><code># Compute the proportion of outcomes in the vector &#39;S&#39; where you won more than $0
+mean(S&gt;0)</code></pre>
+<pre><code>## [1] 0.0977</code></pre>
+</div>
+<div id="sat-testing" class="section level1">
+<h1>SAT Testing</h1>
+<p>The SAT is a standardized college admissions test used in the United
+States. The following two multi-part questions will ask you some
+questions about SAT testing. This is a 6-part question asking you to
+determine some probabilities of what happens when a student guessed for
+all of their answers on the SAT. Use the information below to inform
+your answers for the following questions.</p>
+<p>An old version of the SAT college entrance exam had a -0.25 point
+penalty for every incorrect answer and awarded 1 point for a correct
+answer. The quantitative test consisted of 44 multiple-choice questions
+each with 5 answer choices. Suppose a student chooses answers by
+guessing for all questions on the test.</p>
+<p>1a) What is the probability of guessing correctly for one
+question?</p>
+<pre class="r"><code>prob_one_question &lt;- 1/5
+prob_one_question</code></pre>
+<pre><code>## [1] 0.2</code></pre>
+<p>1b) What is the expected value of points for guessing on one
+question?</p>
+<pre class="r"><code>award &lt;- 1
+prob_award &lt;- 1/5
+penalty &lt;- -0.25
+prob_fail &lt;- 4/5
+# E[X] = ap + b(1-p)
+mu &lt;- award * prob_award + (-0.25*(prob_fail))
+mu</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>1c) What is the expected score of guessing on all 44 questions?</p>
+<pre class="r"><code>award &lt;- 1
+prob_award &lt;- 1/5
+penalty &lt;- -0.25
+prob_fail &lt;- 4/5
+# E[X] = ap + b(1-p)
+mu &lt;- award * prob_award + (-0.25*(prob_fail))
+
+# n*E[X]
+n &lt;- 44
+n * mu</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>1d) What is the standard error of guessing on all 44 questions?</p>
+<pre class="r"><code>award &lt;- 1
+prob_award &lt;- 1/5
+penalty &lt;- -0.25
+prob_fail &lt;- 4/5
+
+## sd(X) = |b-a|*sqrt(p(1-p))
+se &lt;- abs(1+0.25)*sqrt(prob_award*prob_fail)
+## sqrt(n) * sd(X)
+n &lt;- 44
+sigma &lt;- sqrt(n) * se
+sigma</code></pre>
+<pre><code>## [1] 3.316625</code></pre>
+<p>1e) Use the Central Limit Theorem to determine the probability that a
+guessing student scores 8 points or higher on the test</p>
+<pre class="r"><code>award &lt;- 1
+prob_award &lt;- 1/5
+penalty &lt;- -0.25
+prob_fail &lt;- 4/5
+
+mu &lt;- award * prob_award + (-0.25*(prob_fail))
+n &lt;- 44
+se &lt;- abs(1+0.25)*sqrt(prob_award*prob_fail)
+sigma &lt;- sqrt(n) * se
+
+1 - pnorm(8, mean = mu, sd = sigma)</code></pre>
+<pre><code>## [1] 0.007930666</code></pre>
+<p>1f) Set the seed to 21, then run a Monte Carlo simulation of 10,000
+students guessing on the test.</p>
+<p>(IMPORTANT! If you use R 3.6 or later, you will need to use the
+command set.seed(x, sample.kind = “Rounding”) instead of set.seed(x).
+Your R version will be printed at the top of the Console window when you
+start RStudio.)</p>
+<p>What is the probability that a guessing student scores 8 points or
+higher?</p>
+<pre class="r"><code>set.seed(21, sample.kind = &quot;Rounding&quot;)</code></pre>
+<pre><code>## Warning in set.seed(21, sample.kind = &quot;Rounding&quot;): non-uniform &#39;Rounding&#39;
+## sampler used</code></pre>
+<pre class="r"><code>B &lt;- 10000
+n &lt;- 44
+p &lt;- 0.2
+
+tests &lt;- replicate(B, {
+  X &lt;- sample(c(1, -0.25), n, replace = TRUE, prob = c(p, 1-p))
+  sum(X)
+})
+
+mean(tests &gt;= 8)</code></pre>
+<pre><code>## [1] 0.008</code></pre>
+<p>The SAT was recently changed to reduce the number of multiple choice
+options from 5 to 4 and also to eliminate the penalty for guessing. In
+this two-part question, you’ll explore how that affected the expected
+values for the test.</p>
+<p>2a) Suppose that the number of multiple choice options is 4 and that
+there is no penalty for guessing - that is, an incorrect question gives
+a score of 0. What is the expected value of the score when guessing on
+this new test?</p>
+<pre class="r"><code>p &lt;- 1/4
+award &lt;- 1
+penalty &lt;- 0
+n &lt;- 44
+
+mu &lt;- award*p + penalty*(1-p)
+n * mu</code></pre>
+<pre><code>## [1] 11</code></pre>
+<p>2b) Using the normal approximation, what is the estimated probability
+of scoring over 30 when guessing?</p>
+<pre class="r"><code>sigma &lt;- sqrt(n) * abs(penalty-award) * sqrt(p*(1-p))
+1-pnorm(30, mu, sigma)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>2b) Consider a range of correct answer probabilities p &lt;-
+seq(0.25, 0.95, 0.05) representing a range of student skills. What is
+the lowest p such that the probability of scoring over 35 exceeds
+80%?</p>
+<pre class="r"><code>p &lt;- seq(0.25, 0.95, 0.05)
+n &lt;- 44
+a &lt;- 1
+b &lt;- 0
+exp_values &lt;- sapply(p, function(x){
+  mu &lt;- n * a*x + b*(1-x)
+  sigma &lt;- sqrt(n) * abs(b-a) * sqrt(x*(1-x))
+  1-pnorm(35, mu, sigma)
+})
+
+min(p[which(exp_values &gt; 0.8)])</code></pre>
+<pre><code>## [1] 0.85</code></pre>
+</div>
+<div id="betting-on-roulette" class="section level1">
+<h1>Betting on Roulette</h1>
+<p>A casino offers a House Special bet on roulette, which is a bet on
+five pockets (00, 0, 1, 2, 3) out of 38 total pockets. The bet pays out
+6 to 1. In other words, a losing bet yields -$1 and a successful bet
+yields $6. A gambler wants to know the chance of losing money if he
+places 500 bets on the roulette House Special. The following 7-part
+question asks you to do some calculations related to this scenario.</p>
+<pre class="r"><code>award &lt;- 6
+loss &lt;- -1
+p_award &lt;- 5/38
+p_loss &lt;- 1-p_award</code></pre>
+<p>1a) What is the expected value of the payout for one bet?</p>
+<pre class="r"><code>mu &lt;- award*p_award + loss*p_loss
+mu</code></pre>
+<pre><code>## [1] -0.07894737</code></pre>
+<p>1b) What is the standard error of the payout for one bet?</p>
+<pre class="r"><code>sigma &lt;- abs(award-loss)*sqrt(p_award*p_loss)
+sigma</code></pre>
+<pre><code>## [1] 2.366227</code></pre>
+<p>1c) What is the expected value of the average payout over 500
+bets?</p>
+<pre class="r"><code>mu</code></pre>
+<pre><code>## [1] -0.07894737</code></pre>
+<p>1d) What is the standard error of the average payout over 500
+bets?</p>
+<pre class="r"><code>n &lt;- 500
+sigma/sqrt(n)</code></pre>
+<pre><code>## [1] 0.1058209</code></pre>
+<p>1e) What is the expected value of the sum of 500 bets?</p>
+<pre class="r"><code>n * mu</code></pre>
+<pre><code>## [1] -39.47368</code></pre>
+<p>1f) What is the standard error of the sum of 500 bets?</p>
+<pre class="r"><code>sqrt(n)*sigma</code></pre>
+<pre><code>## [1] 52.91045</code></pre>
+<p>1g) Use pnorm() with the expected value of the sum and standard error
+of the sum to calculate the probability of losing money over 500 bets,
+Pr(X &lt;= 0).</p>
+<pre class="r"><code>pnorm(0, n*mu, sqrt(n)*sigma)</code></pre>
+<pre><code>## [1] 0.7721805</code></pre>
+</div>
+<div id="the-big-short" class="section level1">
+<h1>The Big Short</h1>
+<div id="interest-rates-explained" class="section level2">
+<h2>Interest Rates Explained</h2>
+<ul>
+<li><p>Interest rates for loans are set using the probability of loan
+defaults to calculate a rate that minimizes the probability of losing
+money.</p></li>
+<li><p>We can define the outcome of loans as a random variable. We can
+also define the sum of outcomes of many loans as a random
+variable.</p></li>
+<li><p>The Central Limit Theorem can be applied to fit a normal
+distribution to the sum of profits over many loans. We can use
+properties of the normal distribution to calculate the interest rate
+needed to ensure a certain probability of losing money for a given
+probability of default.</p></li>
+</ul>
+<pre class="r"><code>#  Interest rate sampling model
+n &lt;- 1000 # number of loans
+loss_per_foreclosure &lt;- -200000 # cost of a loan
+p &lt;- 0.02 # probability of not return anything (lose 200000$)
+defaults &lt;- sample( c(0,1), n, prob=c(1-p, p), replace = TRUE) # times we lose money (0 not lose, 1 lose)
+sum(defaults * loss_per_foreclosure) # without interest we always lose money</code></pre>
+<pre><code>## [1] -6400000</code></pre>
+<pre class="r"><code># Interest rate Monte Carlo simulation
+B &lt;- 10000
+losses &lt;- replicate(B, {
+    defaults &lt;- sample( c(0,1), n, prob=c(1-p, p), replace = TRUE) 
+  sum(defaults * loss_per_foreclosure)
+})</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>data.frame(losses_in_millions = losses/10^6) %&gt;%
+    ggplot(aes(losses_in_millions)) +
+    geom_histogram(binwidth = 0.6, col = &quot;black&quot;)</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+<pre class="r"><code># Expected value and standard error of the sum of 1,000 loans
+n*(p*loss_per_foreclosure + (1-p)*0)    # expected value </code></pre>
+<pre><code>## [1] -4e+06</code></pre>
+<pre class="r"><code>sqrt(n)*abs(loss_per_foreclosure)*sqrt(p*(1-p))    # standard error</code></pre>
+<pre><code>## [1] 885437.7</code></pre>
+<p>-We can calculate the amount x to add to each loan so that the
+expected value is 0 using the equation l*p + x*(1-p) = 0. Note that this
+equation is the definition of expected value given a loss per
+foreclosure with foreclosure probability p and profit x if there is no
+foreclosure (probability 1-p).</p>
+<p>x = -l*p / (1 - p)</p>
+<pre class="r"><code>x &lt;- -loss_per_foreclosure*p/(1-p)
+x</code></pre>
+<pre><code>## [1] 4081.633</code></pre>
+<p>We should gain 4081.633$ by each loan. On a 180.000$ loan it
+means</p>
+<pre class="r"><code>x/180000</code></pre>
+<pre><code>## [1] 0.02267574</code></pre>
+<p>We want to calculate the value of x for which Pr(S&lt;0) = 0.01. The
+expected value E[S] of the sum of n = 1000 loans given our definitions
+of x, l and p is:</p>
+<pre class="r"><code>mu &lt;- n * (loss_per_foreclosure*p + x*(1-p))
+sigma &lt;- abs(x-loss_per_foreclosure) * sqrt(n*p*(1-p))</code></pre>
+<p>Because we know the definition of a Z-score is Z = (x - mu) / sigma,
+we know that Pr(S&lt;0) = Pr(Z &lt; -mu/sigma). Thus, Pr(S &lt; 0) =
+0.01 equals:</p>
+<p>x &lt;- -l*((np - z*sqrt(np(1-p)))/(n(1-p)+z*sqrt(np(1-p))))</p>
+<pre class="r"><code># Calculating interest rate for 1% probability of losing money
+l &lt;- loss_per_foreclosure
+z &lt;- qnorm(0.01)
+x &lt;- -l*( n*p - z*sqrt(n*p*(1-p)))/ ( n*(1-p) + z*sqrt(n*p*(1-p)))
+x/180000    # interest rate</code></pre>
+<pre><code>## [1] 0.03471767</code></pre>
+<pre class="r"><code>loss_per_foreclosure*p + x*(1-p)    # expected value of the profit per loan</code></pre>
+<pre><code>## [1] 2124.198</code></pre>
+<pre class="r"><code>n*(loss_per_foreclosure*p + x*(1-p)) # expected value of the profit over n loans</code></pre>
+<pre><code>## [1] 2124198</code></pre>
+<pre class="r"><code>#  Monte Carlo simulation for 1% probability of losing money
+
+B &lt;- 100000
+profit &lt;- replicate(B, {
+    draws &lt;- sample( c(x, loss_per_foreclosure), n, 
+                        prob=c(1-p, p), replace = TRUE) 
+    sum(draws)
+})
+mean(profit)    # expected value of the profit over n loans</code></pre>
+<pre><code>## [1] 2126219</code></pre>
+<pre class="r"><code>mean(profit&lt;0)    # probability of losing money</code></pre>
+<pre><code>## [1] 0.0125</code></pre>
+</div>
 </div>
 
 
