@@ -213,13 +213,409 @@ sqrt(n)*sdX
 
 - Random variable times a constant
 
-The expected value of a random variable multiplied by a constant is that constant times its original expected value:
+The expected value of a random variable multiplied by a constant is that constant times its original expected value
+The standard error of a random variable multiplied by a constant is that constant times its original standard error
 
-E[aX] = au
+E[aX] = a*mu
+SE[aX] = a*se
 
-The standard error of a random variable multiplied by a constant is that constant times its original standard error:
+- Average of multiple draws of a random variable
 
-SE[aX] = aSD
+The expected value of the average of multiple draws from an urn is the expected value of the urn (mu).
+The standard deviation of the average of multiple draws from an urn is the standard deviation of the urn divided by the square root of the number of draws (se/sqrt(n)).
+
+- The sum of multiple draws of a random variable
+
+The expected value of the sum of n draws of a random variable is n times its original expected value
+The standard error of the sum of n draws of random variable is sqrt(n) times its original standard error
+
+E[nX] = n*mu
+SE[nX] = sqrt(n*se)
+
+- The sum of multiple different random variables
+
+The expected value of the sum of different random variables is the sum of the individual expected values for each random variable
+The standard error of the sum of different random variables is the square root of the sum of squares of the individual standard errors
+
+E[X1+X2+X3] = mu1 + mu2 + mu3
+SE[X1+X2+X3] = sqrt(se1^2 + se2^2 + se3^2)
+
+# Law of large numbers
+
+- The law of large numbers states that as n increases, the standard error of the average of a random variable decreases. In other words, when n is large, the average of the draws converges to the average of the urn.
+- The law of large numbers is also known as the law of averages.
+- The law of averages only applies when n is very large and events are independent. It is often misused to make predictions about an event being "due" because it has happened less frequently than expected in a small sample size.
+
+# How large is CLT
+
+- The sample size required for the Central Limit Theorem and Law of Large Numbers to apply differs based on the probability of success.
+
+If the probability of success is high, then relatively few observations are needed.
+As the probability of success decreases, more observations are needed.
+
+- If the probability of success is extremely low, such as winning a lottery, then the Central Limit Theorem may not apply even with extremely large sample sizes. The normal distribution is not a good approximation in these cases, and other distributions such as the Poisson distribution (not discussed in these courses) may be more appropriate.
+
+# Exercises
+
+1) In the previous chapter of exercises, you created a random variable S that is the sum of your winnings after betting on green a number of times in American Roulette. What is the probability that you end up winning money if you bet on green 100 times?
+
+```{r}
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1-p_green
+
+# Define the number of bets using the variable 'n'
+n <- 100
+
+# Calculate 'avg', the expected outcome of 100 spins if you win $17 when the ball lands on green and you lose $1 when the ball doesn't land on green
+avg <- n * (17*p_green + -1*p_not_green)
+
+# Compute 'se', the standard error of the sum of 100 outcomes
+se <- sqrt(n) * (17 - -1)*sqrt(p_green*p_not_green)
+
+# Using the expected value 'avg' and standard error 'se', compute the probability that you win money betting on green 100 times.
+prob_loss_money <- pnorm(0,avg,se) # p(x < 0)
+1-prob_loss_money
+```
+
+2) Create a Monte Carlo simulation that generates 10,000 outcomes of S, the sum of 100 bets.
+Compute the average and standard deviation of the resulting list and compare them to the expected value (-5.263158) and standard error (40.19344) for
+that you calculated previously.
+
+```{r}
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1-p_green
+
+# Define the number of bets using the variable 'n'
+n <- 100
+
+# The variable `B` specifies the number of times we want the simulation to run. Let's run the Monte Carlo simulation 10,000 times.
+B <- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling.
+set.seed(1)
+
+# Create an object called `S` that replicates the sample code for `B` iterations and sums the outcomes.
+S <- replicate(B, {
+  X <- sample(c(17,-1), n, replace = T, prob = c(p_green, p_not_green))
+  sum(X)
+})
+
+
+# Compute the average value for 'S'
+mean(S)
+
+# Calculate the standard deviation of 'S'
+sd(S)
+```
+
+3) Now, calculate the probability of winning money from the Monte Carlo simulation. The Monte Carlo simulation from the previous exercise has already been pre-run for you, resulting in the variable S that contains a list of 10,000 simulated outcomes
+
+```{r}
+mean(S > 0)
+```
+
+4) The Monte Carlo result and the CLT approximation for the probability of losing money after 100 bets are close, but not that close. What could account for this?
+
+The CLT does not work as well when the probability of success is small.
+
+5) Now create a random variable that contains your average winnings per bet after betting on green 10,000 times.
+
+```{r}
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling.
+set.seed(1)
+
+# Define the number of bets using the variable 'n'
+n <- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1 - p_green
+
+# Create a vector called `X` that contains the outcomes of `n` bets
+X <- sample(c(17,-1),n,replace = T, prob = c(p_green, p_not_green))
+
+# Define a variable `Y` that contains the mean outcome per bet. Print this mean to the console.
+Y <- mean(X)
+Y
+```
+
+6) What is the expected value of Y, the average outcome per bet after betting on green 10,000 times?
+
+```{r}
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1 - p_green
+
+# Calculate the expected outcome of `Y`, the mean outcome per bet in 10,000 bets
+# E[X] = ap + b(1-p)
+Y <- p_green*17 + (-1*(p_not_green))
+Y
+```
+
+7) What is the standard error of Y, the average result of 10,000 spins?
+
+```{r}
+# Define the number of bets using the variable 'n'
+n <- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1 - p_green
+
+# Compute the standard error of 'Y', the mean outcome per bet from 10,000 bets.
+### |b-a|*sqrt(p(1-p))
+se <- abs(17+1)*sqrt(p_green*p_not_green)
+se/sqrt(n)
+```
+
+8) What is the probability that your winnings are positive after betting on green 10,000 times?
+
+```{r}
+# Define the number of bets using the variable 'n'
+n <- 10000
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1 - p_green
+
+# We defined the average using the following code
+avg <- 17*p_green + -1*p_not_green
+
+# We defined standard error using this equation
+se <- 1/sqrt(n) * (17 - -1)*sqrt(p_green*p_not_green)
+
+# Given this average and standard error, determine the probability of winning more than $0. Print the result to the console.
+
+1 - pnorm(0, mean=avg, sd = se)
+```
+
+9) Create a Monte Carlo simulation that generates 10,000 outcomes of S, the average outcome from 10,000 bets on green. Compute the average and standard deviation of the resulting list to confirm the results from previous exercises using the Central Limit Theorem.
+
+```{r}
+# The variable `n` specifies the number of independent bets on green
+n <- 10000
+
+# The variable `B` specifies the number of times we want the simulation to run
+B <- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random number generation
+set.seed(1)
+
+# Assign a variable `p_green` as the probability of the ball landing in a green pocket
+p_green <- 2 / 38
+
+# Assign a variable `p_not_green` as the probability of the ball not landing in a green pocket
+p_not_green <- 1 - p_green
+
+# Generate a vector `S` that contains the the average outcomes of 10,000 bets modeled 10,000 times
+S <- replicate(B, {
+  X <- sample(c(17,-1),n,replace = T, prob = c(p_green, p_not_green))
+  mean(X)
+})
+
+# Compute the average of `S`
+mean(S)
+
+# Compute the standard deviation of `S`
+sd(S)
+```
+
+10) In a previous exercise, you found the probability of winning more than \$0 after betting on green 10,000 times using the Central Limit Theorem. Then, you used a Monte Carlo simulation to model the average result of betting on green 10,000 times over 10,000 simulated series of bets. What is the probability of winning more than \$0 as estimated by your Monte Carlo simulation? The code to generate the vector S that contains the the average outcomes of 10,000 bets modeled 10,000 times has already been run for you.
+
+```{r}
+# Compute the proportion of outcomes in the vector 'S' where you won more than $0
+mean(S>0)
+```
+
+
+# SAT Testing
+
+The SAT is a standardized college admissions test used in the United States. The following two multi-part questions will ask you some questions about SAT testing. This is a 6-part question asking you to determine some probabilities of what happens when a student guessed for all of their answers on the SAT. Use the information below to inform your answers for the following questions.
+
+An old version of the SAT college entrance exam had a -0.25 point penalty for every incorrect answer and awarded 1 point for a correct answer. The quantitative test consisted of 44 multiple-choice questions each with 5 answer choices. Suppose a student chooses answers by guessing for all questions on the test.
+
+1a) What is the probability of guessing correctly for one question?
+
+```{r}
+prob_one_question <- 1/5
+prob_one_question
+```
+
+1b) What is the expected value of points for guessing on one question?
+
+```{r}
+award <- 1
+prob_award <- 1/5
+penalty <- -0.25
+prob_fail <- 4/5
+# E[X] = ap + b(1-p)
+mu <- award * prob_award + (-0.25*(prob_fail))
+mu
+```
+
+1c) What is the expected score of guessing on all 44 questions?
+
+```{r}
+award <- 1
+prob_award <- 1/5
+penalty <- -0.25
+prob_fail <- 4/5
+# E[X] = ap + b(1-p)
+mu <- award * prob_award + (-0.25*(prob_fail))
+
+# n*E[X]
+n <- 44
+n * mu
+```
+
+1d) What is the standard error of guessing on all 44 questions?
+
+```{r}
+award <- 1
+prob_award <- 1/5
+penalty <- -0.25
+prob_fail <- 4/5
+
+## sd(X) = |b-a|*sqrt(p(1-p))
+se <- abs(1+0.25)*sqrt(prob_award*prob_fail)
+## sqrt(n) * sd(X)
+n <- 44
+sigma <- sqrt(n) * se
+sigma
+```
+
+
+1e) Use the Central Limit Theorem to determine the probability that a guessing student scores 8 points or higher on the test
+
+```{r}
+award <- 1
+prob_award <- 1/5
+penalty <- -0.25
+prob_fail <- 4/5
+
+mu <- award * prob_award + (-0.25*(prob_fail))
+n <- 44
+se <- abs(1+0.25)*sqrt(prob_award*prob_fail)
+sigma <- sqrt(n) * se
+
+1 - pnorm(8, mean = mu, sd = sigma)
+```
+
+1f) Set the seed to 21, then run a Monte Carlo simulation of 10,000 students guessing on the test.
+
+(IMPORTANT! If you use R 3.6 or later, you will need to use the command set.seed(x, sample.kind = "Rounding") instead of set.seed(x). Your R version will be printed at the top of the Console window when you start RStudio.)
+
+What is the probability that a guessing student scores 8 points or higher?
+
+```{r}
+set.seed(21, sample.kind = "Rounding")
+
+B <- 10000
+n <- 44
+p <- 0.2
+
+tests <- replicate(B, {
+  X <- sample(c(1, -0.25), n, replace = TRUE, prob = c(p, 1-p))
+  sum(X)
+})
+
+mean(tests >= 8)
+```
+
+The SAT was recently changed to reduce the number of multiple choice options from 5 to 4 and also to eliminate the penalty for guessing. In this two-part question, you'll explore how that affected the expected values for the test.
+
+2a) Suppose that the number of multiple choice options is 4 and that there is no penalty for guessing - that is, an incorrect question gives a score of 0.
+What is the expected value of the score when guessing on this new test?
+
+```{r}
+p <- 1/4
+award <- 1
+penalty <- 0
+n <- 44
+
+mu <- award*p + penalty*(1-p)
+n * mu
+```
+
+2b) Using the normal approximation, what is the estimated probability of scoring over 30 when guessing?
+
+```{r}
+sigma <- sqrt(n) * abs(penalty-award) * sqrt(p*(1-p))
+1-pnorm(30, mu, sigma)
+```
+
+
+2b) Consider a range of correct answer probabilities p <- seq(0.25, 0.95, 0.05) representing a range of student skills. What is the lowest p such that the probability of scoring over 35 exceeds 80%?
+
+```{r}
+p <- seq(0.25, 0.95, 0.05)
+n <- 44
+a <- 1
+b <- 0
+exp_values <- sapply(p, function(x){
+  mu <- n * a*x + b*(1-x)
+  sigma <- sqrt(n) * abs(b-a) * sqrt(x*(1-x))
+  1-pnorm(35, mu, sigma)
+})
+
+min(p[which(exp_values > 0.8)])
+```
+
+# Betting on Roulette
+
+
+
+A casino offers a House Special bet on roulette, which is a bet on five pockets (00, 0, 1, 2, 3) out of 38 total pockets. The bet pays out 6 to 1. In other words, a losing bet yields -\$1 and a successful bet yields \$6. A gambler wants to know the chance of losing money if he places 500 bets on the roulette House Special.
+The following 7-part question asks you to do some calculations related to this scenario.
+
+```{r}
+award <- 6
+loss <- -1
+p_award <- 5/38
+p_loss <- 1-p_award
+```
+
+1a) What is the expected value of the payout for one bet?
+
+```{r}
+mu <- award*p_award + loss*p_loss
+mu
+```
+
+1b) What is the standard error of the payout for one bet?
+
+```{r}
+sigma <- abs(award-loss)*sqrt(p_award*p_loss)
+sigma
+```
+
+1c) What is the expected value of the average payout over 500 bets?
+
+```{r}
+mu
+```
+
+1d) What is the standard error of the average payout over 500 bets?
+
+```{r}
+n <- 500
+sigma/sqrt(n)
+```
+
 
 
 
