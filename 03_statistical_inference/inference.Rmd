@@ -1,0 +1,42 @@
+---
+title: "Inference"
+author: "Raúl López Domínguez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Statistical inference is the part of statistics that helps distinguish patterns arising from signal from those arising from chance. Statistical inference is a broad topic and here we go over the very basics using polls as a motivating example. To describe the concepts, we complement the mathematical formulas with Monte Carlo simulations and R code.
+
+# Polls
+
+Opinion polling has been conducted since the 19th century. The general goal is to describe the opinions held by a specific population on a given set of topics. Polls are useful when interviewing every member of a particular population is logistically impossible. The general strategy is to interview a smaller group, chosen at random, and then infer the opinions of the entire population from the opinions of the smaller group. Statistical theory is used to justify the process. This theory is referred to as inference and it is the main topic of this chapter.
+
+Elections are a particularly interesting case of opinion polls because the actual opinion of the entire population is revealed on election day. Of course, it costs millions of dollars to run an actual election which makes polling a cost effective strategy for those that want to forecast the results.
+
+In this section, we will show how the probability concepts we learned in the previous chapter can be applied to develop the statistical approaches that make polls an effective tool. We will learn the statistical concepts necessary to define estimates and margins of errors, and show how we can use these to forecast final results relatively well and also provide an estimate of the precision of our forecast. Once we learn this, we will be able to understand two concepts that are ubiquitous in data science: confidence intervals and p-values. Finally, to understand probabilistic statements about the probability of a candidate winning, we will have to learn about Bayesian modeling. In the final sections, we put it all together to recreate the simplified version of the FiveThirtyEight model and apply it to the 2016 election.
+
+## The sampling model for polls
+
+To mimic the challenge real pollsters face in terms of competing with other pollsters for media attention, we will use an urn full of beads to represent voters and pretend we are competing for a $25 dollar prize. The challenge is to guess the spread between the proportion of blue and red beads in this urn.
+
+Before making a prediction, you can take a sample (with replacement) from the urn. To mimic the fact that running polls is expensive, it costs you \$0.10 per each bead you sample. Therefore, if your sample size is 250, and you win, you will break even since you will pay \$25 to collect your \$25 prize. Your entry into the competition can be an interval. If the interval you submit contains the true proportion, you get half what you paid and pass to the second phase of the competition. In the second phase, the entry with the smallest interval is selected as the winner.
+
+```{r}
+library(tidyverse)
+library(dslabs)
+take_poll(25)
+```
+
+The beads inside the urn represent the individuals that will vote on election day. Those that will vote for the Republican candidate are represented with red beads and the Democrats with the blue beads. For simplicity, assume there are no other colors. That is, that there are just two parties: Republican and Democratic.
+
+# Populations, samples, parameters, and estimates
+
+We want to predict the proportion of blue beads in the urn. Let’s call this quantity 
+p, which then tells us the proportion of red beads 1−p.
+
+The spread is the estimated difference between support for the two candidates; so 
+
+spread = p - (1 - p) = 2p - 1
+
+In statistical textbooks, the beads in the urn are called the population. The proportion of blue beads in the population (p) is called a parameter. The 25 beads we see in the previous plot are called a sample. The task of statistical inference is to predict the parameter p using the observed data in the sample.
+

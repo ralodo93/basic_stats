@@ -957,8 +957,231 @@ sqrt(n) * sigma_female_50
 ```{r}
 pnorm(0, mean = n*mu_female_50, sd = sqrt(n)*sigma_female_50)
 ```
+2a) Use death_prob to determine the probability of death within one year for a 50 year old male.
 
+```{r}
+p <- death_prob %>% filter(sex == "Male", age == 50) %>% pull(prob)
+p
+```
 
+2b) Suppose the company wants its expected profits from 1,000 50 year old males with \$150,000 life insurance policies to be \$700,000. Use the formula for expected value of the sum of draws with the following values and solve for the premium  
+b
 
+```{r}
+a <- -150000
+n <- 1000
+sum_mu <- 700000
 
+# sum_mu = n * ((a*p)+(b*(1-p))
+# sum_mu / n = (a*p)+(b*(1-p))
+# (sum_mu /n) - (a*p) = b*(1-p)
+# ((sum_mu/n)-(a*p)) / (1-p) = b
+
+b <- ((sum_mu/n)-(a*p)) / (1-p)
+b
+```
+
+2c) Using the new 50 year old male premium rate, calculate the standard error of the sum of 1,000 premiums.
+
+```{r}
+sigma_male_50 <- abs(a-b)*sqrt(p*(1-p))
+sqrt(n) * sigma_male_50
+```
+
+2d) What is the probability of losing money on a series of 1,000 policies to 50 year old males? Use the Central Limit Theorem
+
+```{r}
+pnorm(0, mean = sum_mu, sd = sqrt(n)*sigma_male_50)
+```
+
+Life insurance rates are calculated using mortality statistics from the recent past. They are priced such that companies are almost assured to profit as long as the probability of death remains similar. If an event occurs that changes the probability of death in a given age group, the company risks significant losses.
+
+In this part, we’ll look at a scenario in which a lethal pandemic disease increases the probability of death within 1 year for a 50 year old to .015. Unable to predict the outbreak, the company has sold 1,000 \$150,000 life insurance policies for \$1,150.
+
+3a) What is the expected value of the company’s profits over 1,000 policies?
+
+```{r}
+p <- .015    # probability of claim
+a <- -150000    # loss per claim
+b <- 1150    # premium - profit when no claim
+n <- 1000
+
+mu_50 <- (a*p) + (b*(1-p))
+mu_sum_50 <- n*mu_50
+mu_sum_50
+```
+
+3b) What is the standard error of the expected value of the company’s profits over 1,000 policies?
+
+```{r}
+sigma_50 <- abs(b-a) * sqrt(p*(1-p))
+se_50 <- sqrt(n) * sigma_50
+se_50
+```
+
+3c) What is the probability of the company losing money?
+
+```{r}
+pnorm(0, mean = mu_sum_50, sd = se_50)
+```
+
+3d) Suppose the company can afford to sustain one-time losses of \$1 million, but larger losses will force it to go out of business. What is the probability of losing more than \$1 million?
+
+```{r}
+pnorm(-1e6, mean = mu_sum_50, sd = se_50)
+```
+
+3e) Investigate death probabilities p <- seq(.01, .03, .001). What is the lowest death probability for which the chance of losing money exceeds 90%?
+
+```{r}
+p <- seq(.01, .03, .001)
+a <- -150000    # loss per claim
+b <- 1150    # premium - profit when no claim
+n <- 1000
+
+p_lose_money <- sapply(p, function(p){
+  exp_val <- n*(a*p + b*(1-p))
+  se <- sqrt(n) * abs(b-a) * sqrt(p*(1-p))
+  pnorm(0, exp_val, se)
+})
+
+data.frame(p, p_lose_money) %>%
+  filter(p_lose_money > 0.9) %>%
+  pull(p) %>%
+  min()
+
+```
+
+3f) What is the lowest death probability for which the chance of losing over $1 million exceeds 90%?
+
+```{r}
+p <- seq(.01, .03, .001)
+a <- -150000    # loss per claim
+b <- 1150    # premium - profit when no claim
+n <- 1000
+
+p_lose_money <- sapply(p, function(p){
+  exp_val <- n*(a*p + b*(1-p))
+  se <- sqrt(n) * abs(b-a) * sqrt(p*(1-p))
+  pnorm(-1e6, exp_val, se)
+})
+
+data.frame(p, p_lose_money) %>%
+  filter(p_lose_money > 0.9) %>%
+  pull(p) %>%
+  min()
+```
+
+4a) Define a sampling model for simulating the total profit over 1,000 loans with probability of claim p_loss = .015, loss of -\$150,000 on a claim, and profit of \$1,150 when there is no claim. Set the seed to 25, then run the model once. What is the reported profit (or loss) in millions?
+
+```{r}
+set.seed(25, sample.kind = "Rounding")
+
+p <- .015
+loss <- -150000
+profit <- 1150
+n <- 1000
+
+outcomes <- sample(c(loss, profit), n, prob = c(p, 1-p), replace = TRUE)
+sum(outcomes)/10^6
+```
+
+4b) Set the seed to 27, then run a Monte Carlo simulation of your sampling model with 10,000 replicates to simulate the range of profits/losses over 1,000 loans. What is the observed probability of losing $1 million or more?
+
+```{r}
+set.seed(27, sample.kind = "Rounding")
+
+p <- .015
+loss <- -150000
+profit <- 1150
+n <- 1000
+B <- 10000
+
+S <- replicate(B, {
+  outcomes <- sample(c(loss, profit), n, prob = c(p, 1-p), replace = TRUE)
+  sum(outcomes)/1e6
+})
+
+mean(S < -1)
+```
+
+Suppose that there is a massive demand for life insurance due to the pandemic, and the company wants to find a premium cost for which the probability of losing money is under 5%, assuming the death rate stays stable at p = 0.015.
+
+5a) Calculate the premium required for a 5% chance of losing money given n=1000 loans, probability of death p=0.015, and loss per claim  l=−150000. Save this premium as x for use in further questions.
+
+```{r}
+p <- .015
+n <- 1000
+l <- -150000
+z <- qnorm(.05)
+x <- -l*( n*p - z*sqrt(n*p*(1-p)))/ ( n*(1-p) + z*sqrt(n*p*(1-p)))
+x
+
+```
+
+5b) What is the expected profit per policy at this rate?
+
+```{r}
+l*p + (x*(1-p))
+```
+
+5c) What is the expected profit over 1,000 policies?
+
+```{r}
+n*(l*p + (x*(1-p)))
+```
+5d) Run a Monte Carlo simulation with  B=10000 to determine the probability of losing money on 1,000 policies given the new premium x, loss on a claim of $150,000, and probability of claim p = .015. Set the seed to 28 before running your simulation.
+
+```{r}
+set.seed(28, sample.kind = "Rounding")
+
+p <- .015
+loss <- -150000
+profit <- x
+n <- 1000
+B <- 10000
+
+S <- replicate(B, {
+  outcomes <- sample(c(loss, profit), n, prob = c(p, 1-p), replace = TRUE)
+  sum(outcomes)
+})
+
+mean(S < 0)
+```
+
+The company cannot predict whether the pandemic death rate will stay stable. Set the seed to 29, then write a Monte Carlo simulation that for each of B=10000 iterations:
+
+- randomly changes p by adding a value between -0.01 and 0.01 with sample(seq(-0.01, 0.01, length = 100), 1)
+
+- uses the new random p to generate a sample of n=1000 policies with premium x and loss per claim l=−150000
+ 
+- returns the profit over n policies (sum of random variable)
+
+```{r}
+set.seed(29, sample.kind="Rounding")
+
+p <- .015
+loss <- -150000
+profit <- x
+n <- 1000
+B <- 10000
+
+profit <- replicate(B, {
+    new_p <- p + sample(seq(-0.01, 0.01, length = 100), 1)
+    draws <- sample(c(x, l), n, 
+                    prob=c(1-new_p, new_p), replace = TRUE) 
+    sum(draws)
+})
+```
+
+6a) What is the probability of losing money?
+
+```{r}
+mean(profit < 0)
+```
+6b) What is the probability of losing more than $1 million?
+
+```{r}
+mean(profit < -1e6)
+```
 
