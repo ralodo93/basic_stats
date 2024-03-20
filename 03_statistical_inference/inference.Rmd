@@ -2,24 +2,21 @@
 title: "Inference"
 author: "Raúl López Domínguez"
 date: "`r Sys.Date()`"
-output: html_document
+output: html_notebook
 ---
 
 Statistical inference is the part of statistics that helps distinguish patterns arising from signal from those arising from chance. Statistical inference is a broad topic and here we go over the very basics using polls as a motivating example. To describe the concepts, we complement the mathematical formulas with Monte Carlo simulations and R code.
 
-# Polls
+# Sampling Model Parameters and Estimates
 
-Opinion polling has been conducted since the 19th century. The general goal is to describe the opinions held by a specific population on a given set of topics. Polls are useful when interviewing every member of a particular population is logistically impossible. The general strategy is to interview a smaller group, chosen at random, and then infer the opinions of the entire population from the opinions of the smaller group. Statistical theory is used to justify the process. This theory is referred to as inference and it is the main topic of this chapter.
+- The task of statistical inference is to estimate an unknown population parameter using observed data from a sample.
+- In a sampling model, the collection of elements in the urn is called the population.
+- A parameter is a number that summarizes data for an entire population.
+- A sample is observed data from a subset of the population.
+- An estimate is a summary of the observed data about a parameter that we believe is informative. It is a data-driven guess of the population parameter.
+- We want to predict the proportion of the blue beads in the urn, the parameter p. The proportion of red beads in the urn is 1-p and the spread is 2p-1.
+- The sample proportion is a random variable. Sampling gives random results drawn from the population distribution.
 
-Elections are a particularly interesting case of opinion polls because the actual opinion of the entire population is revealed on election day. Of course, it costs millions of dollars to run an actual election which makes polling a cost effective strategy for those that want to forecast the results.
-
-In this section, we will show how the probability concepts we learned in the previous chapter can be applied to develop the statistical approaches that make polls an effective tool. We will learn the statistical concepts necessary to define estimates and margins of errors, and show how we can use these to forecast final results relatively well and also provide an estimate of the precision of our forecast. Once we learn this, we will be able to understand two concepts that are ubiquitous in data science: confidence intervals and p-values. Finally, to understand probabilistic statements about the probability of a candidate winning, we will have to learn about Bayesian modeling. In the final sections, we put it all together to recreate the simplified version of the FiveThirtyEight model and apply it to the 2016 election.
-
-## The sampling model for polls
-
-To mimic the challenge real pollsters face in terms of competing with other pollsters for media attention, we will use an urn full of beads to represent voters and pretend we are competing for a $25 dollar prize. The challenge is to guess the spread between the proportion of blue and red beads in this urn.
-
-Before making a prediction, you can take a sample (with replacement) from the urn. To mimic the fact that running polls is expensive, it costs you \$0.10 per each bead you sample. Therefore, if your sample size is 250, and you win, you will break even since you will pay \$25 to collect your \$25 prize. Your entry into the competition can be an interval. If the interval you submit contains the true proportion, you get half what you paid and pass to the second phase of the competition. In the second phase, the entry with the smallest interval is selected as the winner.
 
 ```{r}
 library(tidyverse)
@@ -27,16 +24,95 @@ library(dslabs)
 take_poll(25)
 ```
 
-The beads inside the urn represent the individuals that will vote on election day. Those that will vote for the Republican candidate are represented with red beads and the Democrats with the blue beads. For simplicity, assume there are no other colors. That is, that there are just two parties: Republican and Democratic.
+# The Sample Average
 
-# Populations, samples, parameters, and estimates
+- Many common data science tasks can be framed as estimating a parameter from a sample.
+- We illustrate statistical inference by walking through the process to estimate p. From the estimate of p, we can easily calculate an estimate of the spread, 2p-1.
+- Consider the random variable X that is 1 if a blue bead is chosen and 0 if a red bead is chosen. The proportion of blue beads in N draws is the average of the draws X1, X2 ... XN.
+- ^X is the sample average. It is the average of N random draws: ^X = (X1+X2+...+XN)/N
+- The number of blue beads drawn in N draws, N*^X, is N times the proportion of values in the urn. However, we do not know the true proportion: we are trying to estimate this parameter p.
 
-We want to predict the proportion of blue beads in the urn. Let’s call this quantity 
-p, which then tells us the proportion of red beads 1−p.
+# Polling vs Forecasting
 
-The spread is the estimated difference between support for the two candidates; so 
+- A poll taken in advance of an election estimates p for that moment, not for election day.
+- In order to predict election results, forecasters try to use early estimates of p to predict p on election day. We discuss some approaches in later sections.
 
-spread = p - (1 - p) = 2p - 1
+# Properties of Our Estimate
 
-In statistical textbooks, the beads in the urn are called the population. The proportion of blue beads in the population (p) is called a parameter. The 25 beads we see in the previous plot are called a sample. The task of statistical inference is to predict the parameter p using the observed data in the sample.
+- ^X is a random variable with an expected value and standard error that represents the sample proportion of positive events.
+- The expected value of ^X is the parameter of interest p: E[^X] = p
+- As the number of N increases, the standard error of ^X decresases: SE[^X] = sqrt(p*(1-p)/N)
+- In theory, we can get more accurate estimates of by increasing N. In practice, there are limits on the size of due to costs, as well as other factors we discuss later.
+- We can also use other random variable equations to determine the expected value of the sum of draws E[S] and standard error of the sum of draws SE[S]: E[S] = Np; SE[S] = sqrt(Np(1-p))
+
+# Exercises
+
+1) Suppose you poll a population in which a proportion p of voters are Democrats and p-1 are Republicans. Your sample size is N = 25. Consider the random variable S, which is the total number of Democrats in your sample. What is the expected value of this random variable S?
+
+E[S] = Np
+
+2) What is the standard error of S?
+
+SE[S] = sqrt(Np(1-p))
+
+3) Consider the random variable S/N, which is equivalent to the sample average that we have been denoting as ^X. The variable N represents the sample size and p is the proportion of Democrats in the population. What is the expected value of?
+
+E[^X] = p
+
+4) What is the standard error of the sample average, ^X?
+
+SE[^X] = sqrt(p(1-p)/N)
+
+5) Write a line of code that calculates the standard error se of a sample average when you poll 25 people in the population. Generate a sequence of 100 proportions of Democrats p that vary from 0 (no Democrats) to 1 (all Democrats). Plot se versus p for the 100 different proportions.
+
+```{r}
+# `N` represents the number of people polled
+N <- 25
+
+# Create a variable `p` that contains 100 proportions ranging from 0 to 1 using the `seq` function
+p <- seq(0,1, length = 100)
+
+# Create a variable `se` that contains the standard error of each sample average
+se <- sqrt(p * (1 - p)/N)
+
+# Plot `p` on the x-axis and `se` on the y-axis
+plot(p,se)
+```
+
+6) Using the same code as in the previous exercise, create a for-loop that generates three plots of p versus se when the sample sizes equal N = 25, N = 100, and N = 1000.
+
+```{r}
+# The vector `p` contains 100 proportions of Democrats ranging from 0 to 1 using the `seq` function
+p <- seq(0, 1, length = 100)
+
+# The vector `sample_sizes` contains the three sample sizes
+sample_sizes <- c(25, 100, 1000)
+
+# Write a for-loop that calculates the standard error `se` for every value of `p` for each of the three samples sizes `N` in the vector `sample_sizes`. Plot the three graphs, using the `ylim` argument to standardize the y-axis across all three plots.
+for(N in sample_sizes){
+  se <- sqrt(p*(1-p)/N)
+  plot(p, se, ylim = c(0,0.5/sqrt(25)))
+}
+```
+
+7) Our estimate for the difference in proportions of Democrats and Republicans is d = ^X - (1 - ^X). Which derivation correctly uses the rules we learned about sums of random variables and scaled random variables to derive the expected value of?.
+
+E[^X - (1 - ^X)] = E[2^X -1] = 2E[^X] - 1 = 2p -1 = p - (1 - p)
+
+8) Which derivation correctly uses the rules we learned about sums of random variables and scaled random variables to derive the standard error of d?
+
+SE[^X - (1 - ^X)] = SE[2^X -1] = 2SE[^X] = 2sqrt(p(1-p)/N)
+
+9) Say the actual proportion of Democratic voters is p = 0.45. In this case, the Republican party is winning by a relatively large margin of d = -0.1, or a 10% margin of victory. What is the standard error of the spread 2^X - 1 in this case?
+
+```{r}
+# `N` represents the number of people polled
+N <- 25
+
+# `p` represents the proportion of Democratic voters
+p <- 0.45
+
+# Calculate the standard error of the spread. Print this value to the console.
+
+```
 
