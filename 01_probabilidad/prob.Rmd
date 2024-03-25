@@ -1,0 +1,91 @@
+---
+title: "Probabilidad"
+author: "Raúl López Domínguez"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+# Probabilidad
+
+La probabilidad es una medida numérica de la posibilidad de que ocurra un evento, también conocido como la proporción de veces que ocurre este evento cuando lo repetimos bajo las mismas condiciones. Un evento se define como el resultado de que algo ocurra.
+
+Por ejemplo, si tenemos una urna con bolas de diferente color (8 rojas, 2 verdes y 6 naranjas), la probabilidad de coger una de un color determinado es:
+
+```{r}
+red <- 8
+green <- 2
+orange <- 6
+
+p_red <- red / (red+green+orange)
+p_red
+```
+
+# Simulaciones de Monte Carlo
+
+Las simulaciones de Monte Carlo son una técnica estadística que utiliza números aleatorios para modelar el comportamiento de sistemas complejos. Esta metodología se basa en la generación de múltiples muestras aleatorias para estimar la probabilidad de resultados y analizar la incertidumbre asociada a un problema.
+
+Para realizarlas usamos las funciones `replicate` (simula la repetición de un mismo experimento) y `sample` (coge resultados al azar) de R.
+
+```{r}
+beads <- rep(c("red", "blue"), times = c(2,3))    # create an urn with 2 red, 3 blue
+beads    # view beads object
+sample(beads, 1)    # sample 1 bead at random
+
+B <- 10000    # number of times to draw 1 bead
+events <- replicate(B, sample(beads, 1))    # draw 1 bead, B times
+tab <- table(events)    # make a table of outcome counts
+tab    # view count table
+prop.table(tab)    # view table of outcome proportions
+
+mean(events == "red") # estimated probability of taking a red bead
+mean(events == "blue") # estimated probability of taking a blue bead
+```
+
+## Ejercicio
+
+Supongamos que estamos estudiando la supervivencia de poblaciones de bacterias bajo diferentes condiciones ambientales. En un experimento, se observa que las bacterias pueden sobrevivir en dos tipos de medios: uno con alta concentración de nutrientes (medio A) y otro con baja concentración de nutrientes (medio B). En el medio A, las bacterias tienen un 80% de probabilidad de sobrevivir. Realiza una simulación de Monte Carlo para modelar la supervivencia de una población de bacterias en ambos medios (B = 10000).
+
+```{r}
+B <- 10000
+events_medium_A <- replicate(B, {
+  alive_or_dye = sample(c(1,0), size = 1, prob = c(0.8, 1 - 0.8)) # 1 alive, 0 dye
+})
+mean(events_medium_A) # estimated probability of alive in medium A
+
+events_medium_B <- replicate(B, {
+  alive_or_dye = sample(c(1,0), size = 1, prob = c(0.3, 1 - 0.3)) # 1 alive, 0 dye
+})
+mean(events_medium_B) # estimated probability of alive in medium B
+```
+
+# Independencia
+
+En probabilidad, la independencia se refiere a la falta de relación entre dos eventos. Específicamente, dos eventos son independientes si la ocurrencia (o no ocurrencia) de uno no afecta la probabilidad de que ocurra el otro. Dos eventos A y B son independientes si la probabilidad conjunta de que ocurran ambos eventos es igual al producto de sus probabilidades individuales. Para determinar la probabilid de múltiples eventos usamos la regla de multiplicación: p1 \* p2
+
+## Probabilidad condicional
+
+Es aquella que tiene lugar cuando dos eventos no son independientes. Por ejemplo, volviendo al ejemplo de la urna; imagina que cogemos más de una bola. Al coger la primera bola, la probabilidad de coger una bola roja es:
+
+```{r}
+red <- 8
+green <- 2
+orange <- 6
+
+p_red <- red / (red+green+orange)
+p_red
+```
+
+Sin embargo, si decidimos no devolver esta bola a la urna, al sacar una segunda bola, las probabilidades cambian debido a que se modifica tanto el tamaño muestral (se reduce 1) como el número de bolas rojas (se reduce 1), por lo que la nueva probabilidad es:
+
+```{r}
+red <- 7
+green <- 2
+orange <- 6
+
+p_red <- red / (red+green+orange)
+p_red
+```
+
+
+
+
